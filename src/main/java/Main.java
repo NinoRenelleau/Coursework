@@ -11,12 +11,9 @@ public class Main {
     public static Connection db = null;
 
     public static void main(String[] args) {
-        openDatabase("Project.db");
-// code to get data from, write to the database etc goes here!
-        addNew();
-        delete();
-        update();
-        lookAt();
+        openDatabase("Project-quiz.db");
+
+
         closeDatabase();
     }
 
@@ -42,68 +39,7 @@ public class Main {
         }
     }
 
-    private static void addNew(){
-        try {
 
-            PreparedStatement ps = db.prepareStatement("INSERT INTO UserAccount (Username, password, Score) VALUES (?, ?, ?)");
 
-            ps.setString(1, "Angus");
-            ps.setString(2, "Password73!");
-            ps.setInt(3, 2);
-
-            ps.executeUpdate();
-
-        } catch (Exception exception) {
-            System.out.println("Database error: " + exception.getMessage());
-        }
-    }
-
-    private static void lookAt(){
-        try {
-
-            PreparedStatement ps = db.prepareStatement("SELECT UserID, Username, Score FROM UserAccount");
-
-            ResultSet results = ps.executeQuery();
-            while (results.next()) {
-                int userID = results.getInt(1);
-                String username = results.getString(2);
-                int score = results.getInt(3);
-                System.out.println(userID + " " + username + " " + score);
-            }
-
-        } catch (Exception exception) {
-            System.out.println("Database error: " + exception.getMessage());
-        }
-    }
-
-    private static void delete() {
-        Scanner input = new Scanner(System.in);
-        try {
-            System.out.println("Enter the username of the user you want to delete");
-            String username = input.nextLine();
-            PreparedStatement ps = db.prepareStatement("DELETE FROM UserAccount where Username == ?");
-            ps.setString(1, username);
-            ps.executeUpdate();
-        } catch (Exception exception) {
-            System.out.println("Database error: " + exception.getMessage());
-        }
-    }
-
-    private static void update(){
-        Scanner input = new Scanner(System.in);
-        try {
-            System.out.println("Enter the userId of the user you need to update");
-            String userId = input.nextLine();
-            System.out.println("Enter the updated score");
-            int score = input.nextInt();
-            input.nextLine();
-            PreparedStatement ps = db.prepareStatement("UPDATE UserAccount SET Score = ? where UserID = ?");
-            ps.setString(2, userId);
-            ps.setInt(1, score);
-            ps.executeUpdate();
-        } catch (Exception exception) {
-            System.out.println("Database error: " + exception.getMessage());
-        }
-    }
 
 }
