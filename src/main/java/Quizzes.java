@@ -7,19 +7,21 @@ import java.sql.ResultSet;
 import java.util.Scanner;
 
 public class Quizzes {
-    public static void listQuizzes(){
+    public static void listQuizzes(int courseID){
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("SELECT QuizID, CourseID, QuizName, Rating, NumberOfQuestions, Tags FROM Users");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT QuizID, QuizName, Rating FROM Quizzes WHERE courseID = ?");
+            ps.setInt(1, courseID);
             ResultSet results = ps.executeQuery();
+            PreparedStatement ps2 = Main.db.prepareStatement("SELECT CourseName FROM Courses WHERE CourseID == ?");
+            ps2.setInt(1, courseID);
+            ResultSet results2 = ps2.executeQuery();
+            String coursename = results2.getString(1);
             while (results.next()) {
                 int quizID = results.getInt(1);
-                int courseID = results.getInt(2);
-                String quizname = results.getString(3);
-                String rating = results.getString(4);
-                int numberOfQuestions = results.getInt(5);
-                String tags = results.getString(6);
-                System.out.println("ID: " + quizID + " CourseID: " + courseID + " Title: " + quizname + " Rating: " + rating + " Number of Questions: " + numberOfQuestions + " Tags: " + tags);
+                String quizname = results.getString(2);
+                String rating = results.getString(3);
+                System.out.println("ID: " + quizID + " Course: " + coursename + " Title: " + quizname + " Rating: " + rating);
             }
 
         } catch (Exception exception) {
@@ -27,15 +29,12 @@ public class Quizzes {
         }
     }
 
-    private static void addNewQuiz(String quizName, int numberOfQuestions, String courseID, String tags){
+    private static void addNewQuiz(String quizName, String courseID){
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Quizzes (QuizName, NumberOfQuestions, CourseID, Tags) VALUES (?, ?, ?, ?)");
-
+            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Quizzes (QuizName, CourseID) VALUES (?, ?)");
             ps.setString(1, quizName);
-            ps.setInt(2, numberOfQuestions);
-            ps.setString(3, courseID);
-            ps.setString(4, tags);
+            ps.setString(2, courseID);
 
             ps.executeUpdate();
 

@@ -1,25 +1,22 @@
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-public class Notifications {
-    public static void listNotifications(){
+public class Courses {
+    public static void listCourses(){
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("SELECT SenderID, ReceiverID, CourseID, Message FROM Notifications");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, UserID, CourseName, Tags FROM Courses");
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                int senderID = results.getInt(1);
-                int courseID = results.getInt(2);
-                String message = results.getString(3);
+                int courseID = results.getInt(1);
+                int userID = results.getInt(2);
+                String coursename = results.getString(3);
+                String tags = results.getString(4);
                 PreparedStatement ps2 = Main.db.prepareStatement("SELECT Username FROM Users WHERE UserID == ?");
-                ps2.setInt(1, senderID);
+                ps2.setInt(1, userID);
                 ResultSet results2 = ps2.executeQuery();
                 String username = results2.getString(1);
-                PreparedStatement ps3 = Main.db.prepareStatement("SELECT CourseName FROM Courses WHERE CourseID == ?");
-                ps3.setInt(1, courseID);
-                ResultSet results3 = ps3.executeQuery();
-                String coursename = results3.getString(1);
-                System.out.println("Course: " + coursename + " From: " + username + " Message: " + message);
+                System.out.println("ID: " + courseID + " Creator: " + username + " Title: " + coursename + " Tags: " + tags);
             }
 
         } catch (Exception exception) {
@@ -27,7 +24,7 @@ public class Notifications {
         }
     }
 
-    private static void addNewNotification(String coursename, String tags){
+    private static void addNewCourse(String coursename, String tags){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Courses (CourseName, Tags) VALUES (?, ?)");
