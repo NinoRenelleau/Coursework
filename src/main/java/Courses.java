@@ -24,12 +24,13 @@ public class Courses {
         }
     }
 
-    private static void addNewCourse(String coursename, String tags){
+    private static void addNewCourse(String coursename, String tags, int userID){
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Courses (CourseName, Tags) VALUES (?, ?)");
+            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Courses (CourseName, Tags, UserID) VALUES (?, ?, ?)");
             ps.setString(1, coursename);
             ps.setString(2, tags);
+            ps.setInt(3, userID);
 
             ps.executeUpdate();
 

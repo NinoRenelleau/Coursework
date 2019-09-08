@@ -2,10 +2,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class Notifications {
-    public static void listNotifications(){
+    public static void listNotifications(int userID){
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("SELECT SenderID, ReceiverID, CourseID, Message FROM Notifications");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT SenderID, CourseID, Message FROM Notifications WHERE ReceiverID == ?");
+            ps.setInt(1, userID);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 int senderID = results.getInt(1);
@@ -27,13 +28,13 @@ public class Notifications {
         }
     }
 
-    private static void addNewNotification(String coursename, String tags){
+    private static void addNewNotification(int courseID, int senderID, int receiverID, String message){
         try {
-
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Courses (CourseName, Tags) VALUES (?, ?)");
-            ps.setString(1, coursename);
-            ps.setString(2, tags);
-
+            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Notifications (CourseID, SenderID, ReceiverID, Message) VALUES (?, ?, ?, ?)");
+            ps.setInt(1, courseID);
+            ps.setInt(2, senderID);
+            ps.setInt(3, receiverID);
+            ps.setString(4, message);
             ps.executeUpdate();
 
         } catch (Exception exception) {
@@ -41,10 +42,10 @@ public class Notifications {
         }
     }
 
-    private static void deleteCourse(String courseID) {
+    private static void deleteNotification(String notificationID) {
         try {
-            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Courses where CourseID == ?");
-            ps.setString(1, courseID);
+            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Notifications where NotificationID == ?");
+            ps.setString(1, notificationID);
             ps.executeUpdate();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());

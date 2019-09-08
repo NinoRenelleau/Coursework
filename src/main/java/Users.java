@@ -65,11 +65,18 @@ public class Users {
         }
     }
 
-    private static void updateUserScore(int UserID, String newScore){
+    private static void updateUserScore(int userID){
         try {
+            int newScore = 0;
+            PreparedStatement lookupScore = Main.db.prepareStatement("SELECT Score FROM History WHERE UserID == ?");
+            lookupScore.setInt(1, userID);
+            ResultSet results = lookupScore.executeQuery();
+            while (results.next()) {
+                newScore += results.getInt(1);
+            }
             PreparedStatement ps = Main.db.prepareStatement("UPDATE Users SET Score = ? where UserID = ?");
-            ps.setInt(2, UserID);
-            ps.setString(1, newScore);
+            ps.setInt(2, userID);
+            ps.setInt(1, newScore);
             ps.executeUpdate();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
