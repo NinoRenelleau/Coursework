@@ -28,7 +28,7 @@ public class Notifications {
         }
     }
 
-    private static void addNewNotification(int courseID, int senderID, int receiverID, String message){
+    public static void addNewNotification(int courseID, int senderID, int receiverID, String message){
         try {
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Notifications (CourseID, SenderID, ReceiverID, Message) VALUES (?, ?, ?, ?)");
             ps.setInt(1, courseID);
@@ -42,7 +42,7 @@ public class Notifications {
         }
     }
 
-    private static void deleteNotification(String notificationID) {
+    public static void deleteNotification(String notificationID) {
         try {
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Notifications where NotificationID == ?");
             ps.setString(1, notificationID);

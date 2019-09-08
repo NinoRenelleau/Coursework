@@ -28,7 +28,7 @@ public class Quizzes {
         }
     }
 
-    private static void addNewQuiz(String quizName, String courseID){
+    public static void addNewQuiz(String quizName, String courseID){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Quizzes (QuizName, CourseID) VALUES (?, ?)");
@@ -42,7 +42,7 @@ public class Quizzes {
         }
     }
 
-    private static void deleteQuiz(String quizID) {
+    public static void deleteQuiz(String quizID) {
         try {
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Quizzes where QuizID == ?");
             ps.setString(1, quizID);
@@ -52,7 +52,7 @@ public class Quizzes {
         }
     }
 
-    private static int countUpQuizzes(int courseID){
+    public static int countUpQuizzes(int courseID){
         int QuizCount = 0;
         try {
             PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Quizzes WHERE CourseID == ?");

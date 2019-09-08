@@ -24,7 +24,7 @@ public class Courses {
         }
     }
 
-    private static void addNewCourse(String coursename, String tags, int userID){
+    public static void addNewCourse(String coursename, String tags, int userID){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Courses (CourseName, Tags, UserID) VALUES (?, ?, ?)");
@@ -39,7 +39,7 @@ public class Courses {
         }
     }
 
-    private static void deleteCourse(String courseID) {
+    public static void deleteCourse(String courseID) {
         try {
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Courses where CourseID == ?");
             ps.setString(1, courseID);

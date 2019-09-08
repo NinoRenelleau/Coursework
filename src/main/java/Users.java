@@ -27,7 +27,7 @@ public class Users {
         }
     }
 
-    private static void deleteUser(String UserID) {
+    public static void deleteUser(String UserID) {
         try {
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Users where UserID == ?");
             ps.setString(1, UserID);
@@ -37,7 +37,7 @@ public class Users {
         }
     }
 
-    private static void addNewUser(String username, String password, String UserType, String tags){
+    public static void addNewUser(String username, String password, String UserType, String tags){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Users (Username, Password, UserType, Tags) VALUES (?, ?, ?, ?)");
@@ -54,7 +54,7 @@ public class Users {
         }
     }
 
-    private static void updateUserPassword(int UserID, String newPassword){
+    public static void updateUserPassword(int UserID, String newPassword){
         try {
             PreparedStatement ps = Main.db.prepareStatement("UPDATE Users SET Password = ? where UserID = ?");
             ps.setInt(2, UserID);
@@ -65,7 +65,7 @@ public class Users {
         }
     }
 
-    private static void updateUserScore(int userID){
+    public static void updateUserScore(int userID){
         try {
             int newScore = 0;
             PreparedStatement lookupScore = Main.db.prepareStatement("SELECT Score FROM History WHERE UserID == ?");

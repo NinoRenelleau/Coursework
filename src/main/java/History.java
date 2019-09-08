@@ -2,7 +2,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class History {
-    private static void createHistory(int userID, int quizID, int score, int review){
+    public static void createHistory(int userID, int quizID, int score, int review){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO History (userID, QuizID, Score, Review) VALUES (?, ?, ?, ?)");
@@ -17,7 +17,7 @@ public class History {
         }
     }
 
-    private static void averageReview(){
+    public static void averageReview(){
         try {
             PreparedStatement ps = Main.db.prepareStatement("SELECT QuizID FROM Quizzes");
             ResultSet results = ps.executeQuery();
@@ -43,7 +43,7 @@ public class History {
         }
     }
 
-    private static int totalCourseScore(int userID, int courseID){
+    public static int totalCourseScore(int userID, int courseID){
         int total=0;
         try {
             PreparedStatement ps = Main.db.prepareStatement("SELECT QuizID FROM Quizzes WHERE CourseID == ?");

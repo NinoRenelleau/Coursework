@@ -7,7 +7,7 @@ import java.util.Scanner;
 
 public class Questions {
 
-    private static void addNewQuestion(int quizID, String questionData, int questionTemplateID){
+    public static void addNewQuestion(int quizID, String questionData, int questionTemplateID){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Questions (QuestionData, QuestionTemplateID, QuizID) VALUES (?, ?, ?)");
@@ -21,7 +21,7 @@ public class Questions {
         }
     }
 
-    private static void deleteQuestion(int questionID){
+    public static void deleteQuestion(int questionID){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Questions WHERE QuestionID == ?");
@@ -33,7 +33,7 @@ public class Questions {
         }
     }
 
-    private static int countUpQuestions(int quizID){
+    public static int countUpQuestions(int quizID){
         int QuestCount = 0;
         try {
             PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Questions WHERE QuizID == ?");
@@ -49,7 +49,7 @@ public class Questions {
         return QuestCount;
     }
 
-    private static String GetQuestionData(int questionID){
+    public static String GetQuestionData(int questionID){
         String questionData = "";
         try {
 
@@ -66,7 +66,7 @@ public class Questions {
         return questionData;
     }
 
-    private static int getTemplateID(int questionID){
+    public static int getTemplateID(int questionID){
         int templateID = 0;
         try {
 
