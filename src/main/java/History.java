@@ -16,7 +16,6 @@ public class History {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static void averageReview(){
         try {
             PreparedStatement ps = Main.db.prepareStatement("SELECT QuizID FROM Quizzes");
@@ -42,7 +41,6 @@ public class History {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static int totalCourseScore(int userID, int courseID){
         int total=0;
         try {

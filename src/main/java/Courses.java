@@ -39,10 +39,10 @@ public class Courses {
         }
     }
 
-    public static void deleteCourse(String courseID) {
+    public static void deleteCourse(int courseID) {
         try {
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Courses where CourseID == ?");
-            ps.setString(1, courseID);
+            ps.setInt(1, courseID);
             ps.executeUpdate();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());

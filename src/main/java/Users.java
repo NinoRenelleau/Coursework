@@ -1,25 +1,21 @@
-import org.sqlite.SQLiteConfig;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Scanner;
+
 
 public class Users {
-    public static void listUsers(){
+    public static void listUsers(String InpUsername){
+        int nameLen = InpUsername.length();
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, Username, UserType, Tags, Score FROM Users");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT Username FROM Users");
 
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                int userID = results.getInt(1);
-                String username = results.getString(2);
-                String userType = results.getString(3);
-                String tags = results.getString(4);
-                int score = results.getInt(5);
-                System.out.println("ID: " + userID + " Username: " + username + " Type: " + userType + " Tags: " + tags + " Score: " + score);
+                String username = results.getString(1);
+                if (username.substring(0, nameLen).equals(InpUsername)){
+                    System.out.println(username);
+                }
             }
 
         } catch (Exception exception) {
@@ -27,16 +23,30 @@ public class Users {
         }
     }
 
-    public static void deleteUser(String UserID) {
+    public static int getUserID(String username){
+        int userID = 0;
+        try {
+            PreparedStatement ps = Main.db.prepareStatement("SELECT UserID FROM Users WHERE Username == ?");
+            ps.setString(1, username);
+            ResultSet results = ps.executeQuery();
+            while (results.next()) {
+                userID = results.getInt(1);
+            }
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
+        return userID;
+    }
+
+    public static void deleteUser(int UserID) {
         try {
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Users where UserID == ?");
-            ps.setString(1, UserID);
+            ps.setInt(1, UserID);
             ps.executeUpdate();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static void addNewUser(String username, String password, String UserType, String tags){
         try {
 
@@ -53,7 +63,6 @@ public class Users {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static void updateUserPassword(int UserID, String newPassword){
         try {
             PreparedStatement ps = Main.db.prepareStatement("UPDATE Users SET Password = ? where UserID = ?");
@@ -64,7 +73,6 @@ public class Users {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static void updateUserScore(int userID){
         try {
             int newScore = 0;

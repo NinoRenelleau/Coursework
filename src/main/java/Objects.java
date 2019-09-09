@@ -5,7 +5,6 @@ public class Objects {
     public static String getObjectCoordinates(int objectID){
         String coordinates = "";
         try {
-
             PreparedStatement ps = Main.db.prepareStatement("SELECT Coordinates FROM Object WHERE ObjectID == ?");
             ps.setInt(1, objectID);
             ResultSet results = ps.executeQuery();

@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.util.Scanner;
 
 public class Questions {
-
     public static void addNewQuestion(int quizID, String questionData, int questionTemplateID){
         try {
 
@@ -20,7 +19,6 @@ public class Questions {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static void deleteQuestion(int questionID){
         try {
 
@@ -32,7 +30,6 @@ public class Questions {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static int countUpQuestions(int quizID){
         int QuestCount = 0;
         try {
@@ -48,7 +45,6 @@ public class Questions {
         }
         return QuestCount;
     }
-
     public static String GetQuestionData(int questionID){
         String questionData = "";
         try {
@@ -65,24 +61,18 @@ public class Questions {
         }
         return questionData;
     }
-
     public static int getTemplateID(int questionID){
         int templateID = 0;
         try {
-
             PreparedStatement ps = Main.db.prepareStatement("SELECT QuestionTemplateID FROM Questions WHERE QuestionID == ?");
             ps.setInt(1, questionID);
             ResultSet result = ps.executeQuery();
             while(result.next()){
                 templateID = result.getInt(1);
             }
-
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
         return templateID;
     }
-
-
-
 }

@@ -27,7 +27,6 @@ public class Quizzes {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static void addNewQuiz(String quizName, String courseID){
         try {
 
@@ -41,7 +40,6 @@ public class Quizzes {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static void deleteQuiz(String quizID) {
         try {
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Quizzes where QuizID == ?");
@@ -51,7 +49,6 @@ public class Quizzes {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-
     public static int countUpQuizzes(int courseID){
         int QuizCount = 0;
         try {
@@ -61,13 +58,9 @@ public class Quizzes {
             while (results.next()){
                 QuizCount +=1;
             }
-
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
         return QuizCount;
     }
-
-
-
 }
