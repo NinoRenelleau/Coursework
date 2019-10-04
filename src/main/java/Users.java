@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 
 
 public class Users {
-    public static void listUsers(String InpUsername){
+    public static void getUserFromType(String InpUsername){
         int nameLen = InpUsername.length();
         try {
 
@@ -23,6 +23,27 @@ public class Users {
         }
     }
 
+    public static String login(String username, String password){
+        int userId;
+        String userType = "";
+        String tags = "";
+        int score;
+        try {
+            PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score FROM Users WHERE (Username = ?) AND (Password = ?) ");
+            ps.setString(1, username);
+            ResultSet results = ps.executeQuery();
+            while (results.next()) {
+                userId = results.getInt(1);
+                userType = results.getString(2);
+                tags = results.getString(3);
+                score = results.getInt(4);
+            }
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
+        return (username + "," + password + "," + userType +"," + tags);
+    }
+
     public static int getUserID(String username){
         int userID = 0;
         try {
@@ -31,6 +52,7 @@ public class Users {
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 userID = results.getInt(1);
+
             }
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
@@ -89,6 +111,41 @@ public class Users {
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
+    }
+
+    public static boolean usernameExists(String username){
+        boolean found = false;
+        try {
+            PreparedStatement ps = Main.db.prepareStatement("Exists(SELECT * FROM Users WHERE Username == ?)");
+            ps.setString(1, username);
+            ResultSet results = ps.executeQuery();
+            if (results.getBoolean(1) == true){
+                found = true;
+            } else{
+                found = false;
+            }
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
+        return found;
+    }
+
+    public static boolean passwordExists(String username, String password){
+        boolean found = false;
+        try {
+            PreparedStatement ps = Main.db.prepareStatement("Exists(SELECT * FROM Users WHERE Username == ? AND Password == ?)");
+            ps.setString(1, username);
+            ps.setString(2, password);
+            ResultSet results = ps.executeQuery();
+            if (results.getBoolean(1) == true){
+                found = true;
+            } else{
+                found = false;
+            }
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
+        return found;
     }
 
 }
