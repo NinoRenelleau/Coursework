@@ -116,7 +116,7 @@ public class Users {
     public static boolean usernameExists(String username){
         boolean found = false;
         try {
-            PreparedStatement ps = Main.db.prepareStatement("Exists(SELECT * FROM Users WHERE Username == ?)");
+            PreparedStatement ps = Main.db.prepareStatement("Select Exists(SELECT * FROM Users WHERE Username == ?)");
             ps.setString(1, username);
             ResultSet results = ps.executeQuery();
             if (results.getBoolean(1) == true){
@@ -133,7 +133,7 @@ public class Users {
     public static boolean passwordExists(String username, String password){
         boolean found = false;
         try {
-            PreparedStatement ps = Main.db.prepareStatement("Exists(SELECT * FROM Users WHERE Username == ? AND Password == ?)");
+            PreparedStatement ps = Main.db.prepareStatement("Select Exists(SELECT * FROM Users WHERE Username == ? AND Password == ?)");
             ps.setString(1, username);
             ps.setString(2, password);
             ResultSet results = ps.executeQuery();
