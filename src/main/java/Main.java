@@ -16,6 +16,7 @@ public class Main {
         String password = "";
         String tags = "";
         String userType = "";
+        int score = 0;
         boolean valid = false;
         while (valid == false){
             System.out.println("enter a valid username:");
@@ -30,8 +31,8 @@ public class Main {
                 valid = true;
             }
         }
-
-        Users.addNewUser(username, password, userType, tags);
+        System.out.println("Successfully created a new user...");
+        Users.addNewUser(username, password, userType, tags, score);
 
         closeDatabase();
     }
@@ -109,8 +110,7 @@ public class Main {
 
     private static boolean userTypeValid(String userType){
         boolean valid = true;
-        System.out.println(userType);
-        if ((userType.equalsIgnoreCase("teacher")) && (userType.equalsIgnoreCase("student"))){
+        if ((!userType.equalsIgnoreCase("teacher")) && (!userType.equalsIgnoreCase("student"))){
             valid = false;
             System.out.println("Inputted userType is invalid: must be either 'teacher' or 'student'");
         }

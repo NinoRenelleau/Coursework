@@ -69,15 +69,16 @@ public class Users {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-    public static void addNewUser(String username, String password, String UserType, String tags){
+    public static void addNewUser(String username, String password, String UserType, String tags, int score){
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Users (Username, Password, UserType, Tags) VALUES (?, ?, ?, ?)");
+            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Users (Username, Password, UserType, Tags, Score) VALUES (?, ?, ?, ?, ?)");
 
             ps.setString(1, username);
             ps.setString(2, password);
             ps.setString(3, UserType);
             ps.setString(4, tags);
+            ps.setInt(5, score);
 
             ps.executeUpdate();
 
