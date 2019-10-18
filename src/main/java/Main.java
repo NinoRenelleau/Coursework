@@ -12,7 +12,7 @@ public class Main {
     public static void main(String[] args) {
         openDatabase("Project-quiz.db");
         Scanner input = new Scanner(System.in);
-        String username = "";
+        /*String username = "";
         String password = "";
         String tags = "";
         String userType = "";
@@ -32,7 +32,28 @@ public class Main {
             }
         }
         System.out.println("Successfully created a new user...");
-        Users.addNewUser(username, password, userType, tags, score);
+        Users.addNewUser(username, password, userType, tags, score);*/
+
+        String password = "";
+        String username = "";
+        boolean valid = false;
+        while (valid == false){
+            boolean access = false;
+            while (access == false){
+                System.out.println("Enter username: ");
+                username = input.nextLine();
+                System.out.println("Enter password: ");
+                password = input.nextLine();
+                if (Users.passwordExists(username, password)){
+                    access = true;
+                } else if (Users.usernameExists(username)){
+                    System.out.println("Password is incorrect");
+                } else{
+                    System.out.println("Username does not exist");
+                }
+            }
+            System.out.println();
+        }
 
         closeDatabase();
     }

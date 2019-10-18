@@ -1,21 +1,20 @@
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Users {
-    public static void getUserFromType(String InpUsername){
-        int nameLen = InpUsername.length();
+    public static void getUserFromType(String Inpusername){
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("SELECT Username FROM Users");
-
+            PreparedStatement ps = Main.db.prepareStatement("SELECT Username FROM Users WHERE Username LIKE ?");
+            ps.setString(1, (Inpusername+"%"));
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 String username = results.getString(1);
-                if (username.substring(0, nameLen).equals(InpUsername)){
-                    System.out.println(username);
-                }
+                System.out.println(username);
             }
 
         } catch (Exception exception) {
@@ -27,7 +26,7 @@ public class Users {
         int userId;
         String userType = "";
         String tags = "";
-        int score;
+        int score = 0;
         try {
             PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score FROM Users WHERE (Username = ?) AND (Password = ?) ");
             ps.setString(1, username);
@@ -41,24 +40,56 @@ public class Users {
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
-        return (username + "," + password + "," + userType +"," + tags);
+        return (username + "," + password + "," + userType +"," + tags + "," + score);
     }
 
-    public static int getUserID(String username){
+    public static List getUserFromName(String username){
+        List<String> out = new ArrayList<String>();
         int userID = 0;
+        String userType = "";
+        String tags = "";
+        int score = 0;
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT UserID FROM Users WHERE Username == ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score FROM Users WHERE Username == ?");
             ps.setString(1, username);
             ResultSet results = ps.executeQuery();
-            while (results.next()) {
-                userID = results.getInt(1);
-
-            }
+            userID = results.getInt(1);
+            userType = results.getString(2);
+            tags = results.getString(3);
+            score = results.getInt(4);
+            String UserID = String.valueOf(userID);
+            String Score = String.valueOf(score);
+            out.add(UserID);
+            out.add(username);
+            out.add(userType);
+            out.add(tags);
+            out.add(Score);
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
-        return userID;
+        return out;
     }
+    public static String getUserFromID(int userID){
+        String username = "";
+        String password = "";
+        String userType = "";
+        String tags = "";
+        int score = 0;
+        try {
+            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Users WHERE UserID == ?");
+            ps.setString(1, username);
+            ResultSet results = ps.executeQuery();
+            username = results.getString(2);
+            password = results.getString(3);
+            userType = results.getString(4);
+            tags = results.getString(5);
+            score = results.getInt(6);
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
+        return (userID + "," + username + "," + password + "," + userType +"," + tags + "," + score);
+    }
+
 
     public static void deleteUser(int UserID) {
         try {
