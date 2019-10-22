@@ -36,24 +36,40 @@ public class Main {
 
         String password = "";
         String username = "";
+        String newPassword = "";
         boolean valid = false;
+        boolean access = false;
+        while (access == false){
+            System.out.println("Enter username: ");
+            username = input.nextLine();
+            System.out.println("Enter password: ");
+            password = input.nextLine();
+            if (Users.passwordExists(username, password)){
+                access = true;
+            } else if (Users.usernameExists(username)){
+                System.out.println("Password is incorrect");
+            } else{
+                System.out.println("Username does not exist");
+            }
+        }
+        System.out.println("Successfully logged in...");
+        List<String> userRec = new ArrayList<String>();
+        userRec = Users.getUserFromName(username);
+        int userId = Integer.parseInt(userRec.get(0));
         while (valid == false){
-            boolean access = false;
-            while (access == false){
-                System.out.println("Enter username: ");
-                username = input.nextLine();
-                System.out.println("Enter password: ");
-                password = input.nextLine();
-                if (Users.passwordExists(username, password)){
-                    access = true;
-                } else if (Users.usernameExists(username)){
-                    System.out.println("Password is incorrect");
-                } else{
-                    System.out.println("Username does not exist");
+            System.out.println("Enter a new password: ");
+            newPassword = input.nextLine();
+            System.out.println("enter the new password again: ");
+            if (!newPassword.equals(input.nextLine())){
+                System.out.println("Passwords don't match try again");
+            } else{
+                if(passwordValid(newPassword)){
+                    valid = true;
                 }
             }
-            System.out.println();
         }
+        System.out.println("Successfully changed password...");
+        Users.updateUserPassword(userId, newPassword);
 
         closeDatabase();
     }
