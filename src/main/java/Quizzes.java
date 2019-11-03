@@ -9,17 +9,15 @@ import java.util.Scanner;
 public class Quizzes {
     public static void listQuizzes(int courseID){
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT QuizID, QuizName, Rating FROM Quizzes WHERE courseID = ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseName, QuizID, QuizName, Rating FROM Quizzes " +
+                    "INNER JOIN Courses ON Courses.CourseID = Quizzes.CourseID WHERE Quizzes.CourseID = ?");
             ps.setInt(1, courseID);
             ResultSet results = ps.executeQuery();
-            PreparedStatement ps2 = Main.db.prepareStatement("SELECT CourseName FROM Courses WHERE CourseID == ?");
-            ps2.setInt(1, courseID);
-            ResultSet results2 = ps2.executeQuery();
-            String coursename = results2.getString(1);
             while (results.next()) {
-                int quizID = results.getInt(1);
-                String quizname = results.getString(2);
-                String rating = results.getString(3);
+                String coursename = results.getString(1);
+                int quizID = results.getInt(2);
+                String quizname = results.getString(3);
+                String rating = results.getString(4);
                 System.out.println("ID: " + quizID + " Course: " + coursename + " Title: " + quizname + " Rating: " + rating);
             }
 
