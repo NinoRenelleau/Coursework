@@ -34,7 +34,7 @@ public class Main {
         System.out.println("Successfully created a new user...");
         Users.addNewUser(username, password, userType, tags, score);*/
 
-        String password = "";
+        /*String password = "";
         String username = "";
         String newPassword = "";
         boolean valid = false;
@@ -69,7 +69,29 @@ public class Main {
             }
         }
         System.out.println("Successfully changed password...");
-        Users.updateUserPassword(userId, newPassword);
+        Users.updateUserPassword(userId, newPassword);*/
+
+        String password = "";
+        String username = "";
+        boolean access = false;
+        while (access == false){
+            System.out.println("Enter username: ");
+            username = input.nextLine();
+            System.out.println("Enter password: ");
+            password = input.nextLine();
+            if (Users.passwordExists(username, password)){
+                access = true;
+            } else if (Users.usernameExists(username)){
+                System.out.println("Password is incorrect");
+            } else{
+                System.out.println("Username does not exist");
+            }
+        }
+        List<String> userRec = new ArrayList<String>();
+        userRec = Users.getUserFromName(username);
+        int userId = Integer.parseInt(userRec.get(0));
+        System.out.println("Successfully deleted user with username: " + username);
+        Users.deleteUser(userId);
 
         closeDatabase();
     }
