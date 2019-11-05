@@ -6,7 +6,7 @@ import java.util.List;
 
 
 public class Users {
-    public static void getUserFromType(String Inpusername){
+    public static void searchUsers(String Inpusername){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("SELECT Username FROM Users WHERE Username LIKE ?");
