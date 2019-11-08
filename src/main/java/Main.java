@@ -71,7 +71,7 @@ public class Main {
         System.out.println("Successfully changed password...");
         Users.updateUserPassword(userId, newPassword);*/
 
-        String password = "";
+        /*String password = "";
         String username = "";
         boolean access = false;
         while (access == false){
@@ -91,7 +91,9 @@ public class Main {
         userRec = Users.getUserFromName(username);
         int userId = Integer.parseInt(userRec.get(0));
         System.out.println("Successfully deleted user with username: " + username);
-        Users.deleteUser(userId);
+        Users.deleteUser(userId);*/
+
+        History.averageReview();
 
         closeDatabase();
     }

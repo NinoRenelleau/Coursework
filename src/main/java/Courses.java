@@ -114,4 +114,22 @@ public class Courses {
         }
     }
 
+    public static void searchByTags(String InpTags){
+        try {
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID WHERE Courses.Tags LIKE ?");
+            ps.setString(1, ("%"+InpTags+"%"));
+            ResultSet results = ps.executeQuery();
+            while (results.next()) {
+                int courseID = results.getInt(1);
+                String username = results.getString(2);
+                String coursename = results.getString(3);
+                String tags = results.getString(4);
+                System.out.println("ID: " + courseID + " Creator: " + username + " Title: " + coursename + " Tags: " + tags);
+            }
+
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
+    }
+
 }

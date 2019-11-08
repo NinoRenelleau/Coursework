@@ -16,6 +16,22 @@ public class History {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
+
+    public static void updateHistory(int userID, int quizID, int score, int review){
+        try {
+
+            PreparedStatement ps = Main.db.prepareStatement("UPDATE History SET Score = ?, Review = ? WHERE UserID = ?, QuizID = ?");
+            ps.setInt(3, userID);
+            ps.setInt(4, quizID);
+            ps.setInt(1, score);
+            ps.setInt(2, review);
+            ps.executeUpdate();
+
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
+    }
+
     public static void averageReview(){
         try {
             PreparedStatement ps = Main.db.prepareStatement("SELECT QuizID FROM Quizzes");
@@ -41,6 +57,7 @@ public class History {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
+
     public static int totalCourseScore(int userID, int courseID){
         int total=0;
         try {
@@ -61,5 +78,21 @@ public class History {
             System.out.println("Database error: " + exception.getMessage());
         }
         return total;
+    }
+
+    public static void listHistory(){
+        try {
+            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM History");
+            ResultSet results = ps.executeQuery();
+            while (results.next()) {
+                int UserID = results.getInt(1);
+                int QuizID = results.getInt(2);
+                int score = results.getInt(3);
+                int review = results.getInt(4);
+                System.out.println("User ID: " + UserID + " Quiz ID: " + QuizID + " Score: " + score + " Review: " + review);
+            }
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
     }
 }

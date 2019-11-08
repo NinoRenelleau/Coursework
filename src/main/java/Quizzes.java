@@ -25,12 +25,12 @@ public class Quizzes {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-    public static void addNewQuiz(String quizName, String courseID){
+    public static void addNewQuiz(String quizName, int courseID){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Quizzes (QuizName, CourseID) VALUES (?, ?)");
             ps.setString(1, quizName);
-            ps.setString(2, courseID);
+            ps.setInt(2, courseID);
 
             ps.executeUpdate();
 
@@ -38,27 +38,28 @@ public class Quizzes {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-    public static void deleteQuiz(String quizID) {
+    public static void deleteQuiz(int quizID) {
         try {
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Quizzes where QuizID == ?");
-            ps.setString(1, quizID);
+            ps.setInt(1, quizID);
             ps.executeUpdate();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-    public static int countUpQuizzes(int courseID){
-        int QuizCount = 0;
+
+    public static void updateQuiz(int quizID, String quizName){
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Quizzes WHERE CourseID == ?");
-            ps.setInt(1, courseID);
-            ResultSet results = ps.executeQuery();
-            while (results.next()){
-                QuizCount +=1;
-            }
+
+            PreparedStatement ps = Main.db.prepareStatement("UPDATE Quizzes SET QuizName = ? WHERE QuizID = ?");
+            ps.setString(1, quizName);
+            ps.setInt(2, quizID);
+
+            ps.executeUpdate();
+
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
-        return QuizCount;
     }
+
 }
