@@ -6,7 +6,7 @@ import java.util.List;
 
 
 public class Users {
-    public static void searchUsers(String Inpusername){
+    public static void search(String Inpusername){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("SELECT Username FROM Users WHERE Username LIKE ?");
@@ -28,7 +28,8 @@ public class Users {
         String tags = "";
         int score = 0;
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score FROM Users WHERE (Username = ?) AND (Password = ?) ");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score " +
+                    "FROM Users WHERE (Username = ?) AND (Password = ?) ");
             ps.setString(1, username);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
@@ -43,14 +44,14 @@ public class Users {
         return (username + "," + password + "," + userType +"," + tags + "," + score);
     }
 
-    public static List getUserFromName(String username){
+    public static List getFromName(String username){
         List<String> out = new ArrayList<String>();
         int userID = 0;
         String userType = "";
         String tags = "";
         int score = 0;
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score FROM Users WHERE Username == ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score FROM Users WHERE Username = ?");
             ps.setString(1, username);
             ResultSet results = ps.executeQuery();
             userID = results.getInt(1);
@@ -69,14 +70,14 @@ public class Users {
         }
         return out;
     }
-    public static String getUserFromID(int userID){
+    public static String getFromID(int userID){
         String username = "";
         String password = "";
         String userType = "";
         String tags = "";
         int score = 0;
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Users WHERE UserID == ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Users WHERE UserID = ?");
             ps.setString(1, username);
             ResultSet results = ps.executeQuery();
             username = results.getString(2);
@@ -91,33 +92,36 @@ public class Users {
     }
 
 
-    public static void deleteUser(int UserID) {
+    public static void delete(int UserID) {
         try {
-            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Users where UserID == ?");
+            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Users where UserID = ?");
             ps.setInt(1, UserID);
             ps.executeUpdate();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-    public static void addNewUser(String username, String password, String UserType, String tags, int score){
+
+    /*
+    The following method creates a user; it takes appropriate parameters to query the database.
+    It makes use of a prepared statement, which allows the query to be parameterized.
+     */
+    public static void create(String username, String password, String UserType, String tags, int score){
         try {
-
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Users (Username, Password, UserType, Tags, Score) VALUES (?, ?, ?, ?, ?)");
-
+            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Users " +
+                    "(Username, Password, UserType, Tags, Score) VALUES (?, ?, ?, ?, ?)");
             ps.setString(1, username);
             ps.setString(2, password);
             ps.setString(3, UserType);
             ps.setString(4, tags);
             ps.setInt(5, score);
-
             ps.executeUpdate();
-
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-    public static void updateUserPassword(int UserID, String newPassword){
+
+    public static void updatePassword(int UserID, String newPassword){
         try {
             PreparedStatement ps = Main.db.prepareStatement("UPDATE Users SET Password = ? where UserID = ?");
             ps.setInt(2, UserID);
@@ -127,10 +131,10 @@ public class Users {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-    public static void updateUserScore(int userID){
+    public static void updateScore(int userID){
         try {
             int newScore = 0;
-            PreparedStatement lookupScore = Main.db.prepareStatement("SELECT Score FROM History WHERE UserID == ?");
+            PreparedStatement lookupScore = Main.db.prepareStatement("SELECT Score FROM History WHERE UserID = ?");
             lookupScore.setInt(1, userID);
             ResultSet results = lookupScore.executeQuery();
             while (results.next()) {

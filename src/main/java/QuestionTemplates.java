@@ -2,7 +2,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class QuestionTemplates {
-    public static void createTemplate(String name, String instruction){
+    public static void create(String name, String instruction){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO QuestionTemplates (Instruction, TemplateName) VALUES (?, ?)");
@@ -15,11 +15,11 @@ public class QuestionTemplates {
         }
     }
 
-    public static String getTemplateInstruction(int templateID){
+    public static String getInstruction(int templateID){
         String instruction = "";
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("SELECT Instruction FROM QuestionTemplates WHERE QuestionTemplateID == ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT Instruction FROM QuestionTemplates WHERE QuestionTemplateID = ?");
             ps.setInt(1, templateID);
             ResultSet results = ps.executeQuery();
             while (results.next()){
@@ -32,15 +32,29 @@ public class QuestionTemplates {
         return instruction;
     }
 
-    public static void listTemplates(){
+    public static void list(){
         try {
 
-            PreparedStatement ps = Main.db.prepareStatement("SELECT TemplateName FROM QuestionTemplates");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM QuestionTemplates");
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                String name = results.getString(1);
-                System.out.println("Template Name: " + name);
+                int templateID = results.getInt(1);
+                String name = results.getString(2);
+                String instruction = results.getString(3);
+                System.out.println("ID: " + templateID + " Template Name: " + name + " Instructions: " + instruction);
             }
+
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
+    }
+
+    public static void delete(int templateID){
+        try {
+
+            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM QuestionTemplates WHERE QuestionTemplateID = ?");
+            ps.setInt(1, templateID);
+            ps.executeUpdate();
 
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());

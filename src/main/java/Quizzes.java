@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.util.Scanner;
 
 public class Quizzes {
-    public static void listQuizzes(int courseID){
+    public static void list(int courseID){
         try {
             PreparedStatement ps = Main.db.prepareStatement("SELECT CourseName, QuizID, QuizName, Rating FROM Quizzes " +
                     "INNER JOIN Courses ON Courses.CourseID = Quizzes.CourseID WHERE Quizzes.CourseID = ?");
@@ -25,7 +25,7 @@ public class Quizzes {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-    public static void addNewQuiz(String quizName, int courseID){
+    public static void create(String quizName, int courseID){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Quizzes (QuizName, CourseID) VALUES (?, ?)");
@@ -38,9 +38,9 @@ public class Quizzes {
             System.out.println("Database error: " + exception.getMessage());
         }
     }
-    public static void deleteQuiz(int quizID) {
+    public static void delete(int quizID) {
         try {
-            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Quizzes where QuizID == ?");
+            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Quizzes where QuizID = ?");
             ps.setInt(1, quizID);
             ps.executeUpdate();
         } catch (Exception exception) {
@@ -48,7 +48,7 @@ public class Quizzes {
         }
     }
 
-    public static void updateQuiz(int quizID, String quizName){
+    public static void update(int quizID, String quizName){
         try {
 
             PreparedStatement ps = Main.db.prepareStatement("UPDATE Quizzes SET QuizName = ? WHERE QuizID = ?");
