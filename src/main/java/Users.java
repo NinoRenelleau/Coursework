@@ -23,7 +23,7 @@ public class Users {
     }
 
     public static String login(String username, String password){
-        int userId;
+        int userId = 0;
         String userType = "";
         String tags = "";
         int score = 0;
@@ -41,7 +41,7 @@ public class Users {
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
         }
-        return (username + "," + password + "," + userType +"," + tags + "," + score);
+        return (userId + "," + userType +"," + tags + "," + score);
     }
 
     public static List getFromName(String username){
@@ -152,7 +152,8 @@ public class Users {
     public static boolean usernameExists(String username){
         boolean found = false;
         try {
-            PreparedStatement ps = Main.db.prepareStatement("Select Exists(SELECT * FROM Users WHERE Username == ?)");
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "Select Exists(SELECT * FROM Users WHERE Username == ?)");
             ps.setString(1, username);
             ResultSet results = ps.executeQuery();
             if (results.getBoolean(1) == true){
@@ -165,11 +166,11 @@ public class Users {
         }
         return found;
     }
-
     public static boolean passwordExists(String username, String password){
         boolean found = false;
         try {
-            PreparedStatement ps = Main.db.prepareStatement("Select Exists(SELECT * FROM Users WHERE Username == ? AND Password == ?)");
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "Select Exists(SELECT * FROM Users WHERE Username == ? AND Password == ?)");
             ps.setString(1, username);
             ps.setString(2, password);
             ResultSet results = ps.executeQuery();
