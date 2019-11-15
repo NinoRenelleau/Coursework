@@ -1,10 +1,9 @@
+package Controller;
 
+import Server.Main;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Scanner;
 
 public class Quizzes {
     public static void list(int courseID){
