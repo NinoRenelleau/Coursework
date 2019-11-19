@@ -1,14 +1,19 @@
 package Controller;
 
 import Server.Main;
-import com.sun.jersey.multipart.FormDataParam;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.UUID;
+
+@SuppressWarnings("unchecked")
+@Path("courses/")
 
 public class Courses {
     @GET
@@ -18,7 +23,7 @@ public class Courses {
         System.out.println("courses/list");
         JSONArray list = new JSONArray();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags " +
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Courses.Tags " +
                     "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID");
             ResultSet results = ps.executeQuery();
             while (results.next()) {

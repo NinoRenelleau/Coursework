@@ -2,77 +2,117 @@ package Controller;
 
 import Server.Main;
 
+import Server.Main;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
+@SuppressWarnings("unchecked")
+@Path("users/")
 
 public class Users {
-    public static void search(String Inpusername){
-        try {
 
+    @GET
+    @Path("search")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String search(@FormDataParam("username") String InpUsername){
+
+        System.out.println("users/search");
+        JSONArray list = new JSONArray();
+        try {
+            if (InpUsername == null) {
+                throw new Exception("The username is missing in the HTTP request's URL.");
+            }
             PreparedStatement ps = Main.db.prepareStatement("SELECT Username FROM Users WHERE Username LIKE ?");
-            ps.setString(1, (Inpusername+"%"));
+            ps.setString(1, (InpUsername+"%"));
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                String username = results.getString(1);
-                System.out.println(username);
+                JSONObject item = new JSONObject();
+                item.put("username", results.getString(1));
+                list.add(item);
             }
-
+            return list.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
     }
 
-    public static String login(String username, String password){
-        int userId = 0;
-        String userType = "";
-        String tags = "";
-        int score = 0;
+    @GET
+    @Path("login")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String login(@FormDataParam("username") String username, @FormParam("password") String password){
+
+        System.out.println("users/login");
+        JSONObject item = new JSONObject();
         try {
+            if (username == null || password == null) {
+                throw new Exception("A form parameter is missing in the HTTP request's URL.");
+            }
+            if (!usernameExists(username)){
+                throw new Exception("The username in the HTTP request's URL, does not exist.");
+            }
+            if (!passwordExists(username, password){
+                throw new Exception("The password in the HTTP request's URL, is wrong");
+            }
             PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score " +
                     "FROM Users WHERE (Username = ?) AND (Password = ?) ");
             ps.setString(1, username);
+            ps.setString(2, password);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                userId = results.getInt(1);
-                userType = results.getString(2);
-                tags = results.getString(3);
-                score = results.getInt(4);
+                item.put("username", username);
+                item.put("username", password);
+                item.put("userID", results.getInt(1));
+                item.put("userType", results.getString(2));
+                item.put("Tags", results.getString(3));
+                item.put("Score", results.getInt(4));
             }
+            return item.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
-        return (userId + "," + userType +"," + tags + "," + score);
     }
 
-    public static List getFromName(String username){
-        List<String> out = new ArrayList<String>();
-        int userID = 0;
-        String userType = "";
-        String tags = "";
-        int score = 0;
+    @GET
+    @Path("getFromName")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getFromName(@FormDataParam("username") String username){
+
+        System.out.println("users/getFromName");
+        JSONObject item = new JSONObject();
         try {
+            if (username == null) {
+                throw new Exception("A form parameter is missing in the HTTP request's URL.");
+            }
+            if (!usernameExists(username)){
+                throw new Exception("The username in the HTTP request's URL, does not exist.");
+            }
             PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score FROM Users WHERE Username = ?");
             ps.setString(1, username);
             ResultSet results = ps.executeQuery();
-            userID = results.getInt(1);
-            userType = results.getString(2);
-            tags = results.getString(3);
-            score = results.getInt(4);
-            String UserID = String.valueOf(userID);
-            String Score = String.valueOf(score);
-            out.add(UserID);
-            out.add(username);
-            out.add(userType);
-            out.add(tags);
-            out.add(Score);
+            while (results.next()) {
+                item.put("username", username);
+                item.put("userID", results.getInt(1));
+                item.put("userType", results.getString(2));
+                item.put("Tags", results.getString(3));
+                item.put("Score", results.getInt(4));
+            }
+            return item.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
-        return out;
     }
+
     public static String getFromID(int userID){
         String username = "";
         String password = "";

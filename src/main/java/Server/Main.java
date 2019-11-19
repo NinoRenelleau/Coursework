@@ -7,12 +7,9 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.sqlite.SQLiteConfig;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLOutput;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
 
 public class Main {
 
@@ -24,8 +21,9 @@ public class Main {
         ResourceConfig config = new ResourceConfig();
         config.packages("Controller");
         config.register(MultiPartFeature.class);
-        ServletHolder servlet = new ServletHolder(new ServletContainer(config));
         Server server = new Server(8081);
+
+        ServletHolder servlet = new ServletHolder(new ServletContainer(config));
         ServletContextHandler context = new ServletContextHandler(server, "/");
         context.addServlet(servlet, "/*");
          try{
