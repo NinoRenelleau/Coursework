@@ -84,7 +84,7 @@ public class Courses {
     @Produces(MediaType.APPLICATION_JSON)
     public String searchByName(@FormDataParam("coursename") String InpCourse){
 
-        System.out.println("thing/searchByName");
+        System.out.println("courses/searchByName");
         JSONArray list = new JSONArray();
         try {
             if (InpCourse == null) {
@@ -108,43 +108,67 @@ public class Courses {
             return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
     }
-    public static void searchByCreator(String InpUsername){
+
+    @GET
+    @Path("searchByCreator")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String searchByCreator(@FormDataParam("username") String InpName){
+
+        System.out.println("courses/searchByCreator");
+        JSONArray list = new JSONArray();
         try {
+            if (InpName == null) {
+                throw new Exception("The creator's username is missing in the HTTP request's URL.");
+            }
             PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags " +
                     "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID WHERE Users.Username = ?");
-            ps.setString(1, (InpUsername));
+            ps.setString(1, InpName);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                int courseID = results.getInt(1);
-                String username = results.getString(2);
-                String coursename = results.getString(3);
-                String tags = results.getString(4);
-                System.out.println("ID: " + courseID + " Creator: " + username + " Title: " + coursename + " Tags: " + tags);
+                JSONObject item = new JSONObject();
+                item.put("course ID", results.getInt(1));
+                item.put("username", results.getString(2));
+                item.put("coursename", results.getString(3));
+                item.put("tags", results.getString(4));
+                list.add(item);
             }
-
+            return list.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
     }
 
 
 
-    public static void searchByID(int courseID){
+
+    @GET
+    @Path("searchByID/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String searchByID(@PathParam("id") Integer id){
+        System.out.println("courses/searchByID" + id);
+        JSONObject item = new JSONObject();
         try {
+            if (id == null) {
+                throw new Exception("Course ID is missing in the HTTP request's URL.");
+            }
             PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags " +
                     "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID WHERE CourseID = ?");
-            ps.setInt(1, (courseID));
+            ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
-            while (results.next()) {
-                String username = results.getString(2);
-                String coursename = results.getString(3);
-                String tags = results.getString(4);
-                System.out.println("ID: " + courseID + " Creator: " + username + " Title: " + coursename + " Tags: " + tags);
+            if (results.next()) {
+                item.put("course ID", results.getInt(1));
+                item.put("username", results.getString(2));
+                item.put("coursename", results.getString(3));
+                item.put("tags", results.getString(4));
             }
+            return item.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
     }
+
 
     @POST
     @Path("update")
@@ -168,21 +192,33 @@ public class Courses {
         }
     }
 
-    public static void searchByTags(String InpTags){
+    @GET
+    @Path("searchByTags")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String searchByTags(@FormDataParam("tags") String InpTags){
+
+        System.out.println("courses/searchByTags");
+        JSONArray list = new JSONArray();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID WHERE Courses.Tags LIKE ?");
+            if (InpTags == null) {
+                throw new Exception("The course tag is missing in the HTTP request's URL.");
+            }
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags FROM Courses " +
+                    "INNER JOIN Users ON Courses.UserID = Users.UserID WHERE Courses.Tags LIKE ?");
             ps.setString(1, ("%"+InpTags+"%"));
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                int courseID = results.getInt(1);
-                String username = results.getString(2);
-                String coursename = results.getString(3);
-                String tags = results.getString(4);
-                System.out.println("ID: " + courseID + " Creator: " + username + " Title: " + coursename + " Tags: " + tags);
+                JSONObject item = new JSONObject();
+                item.put("course ID", results.getInt(1));
+                item.put("username", results.getString(2));
+                item.put("coursename", results.getString(3));
+                item.put("tags", results.getString(4));
+                list.add(item);
             }
-
+            return list.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
     }
 
