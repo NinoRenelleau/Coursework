@@ -46,7 +46,7 @@ public class Courses {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(
-            @FormDataParam("usedId") Integer id, @FormDataParam("coursename") String coursename, @FormDataParam("tags") String tags){
+            @FormDataParam("userId") Integer id, @FormDataParam("coursename") String coursename, @FormDataParam("tags") String tags){
         try {
             if (id == null || coursename == null || tags == null){
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
@@ -68,10 +68,13 @@ public class Courses {
     @Path("delete")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public String delete(@FormDataParam("courseId") Integer id) {
+    public String delete(@FormDataParam("courseId") Integer id, @CookieParam("token") String cookie) {
         try {
             if (id == null) {
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
+            }
+            if (validateSessionCookie(cookie) == null){
+
             }
             System.out.println("courses/delete id=" + id);
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Courses where CourseID == ?");
@@ -226,5 +229,23 @@ public class Courses {
             return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
     }
+
+    public static int validateSessionCookie(String token) {
+        try {
+            PreparedStatement statement = Main.db.prepareStatement(
+                    "SELECT UserID FROM Users WHERE SessionToken = ?");
+            statement.setString(1, token);
+            ResultSet results = statement.executeQuery();
+            if (results != null && results.next()) {
+                return results.getInt(1);
+            }
+        } catch (Exception resultsException) {
+            String error = "Database error - can't select by id from 'Admins' table: " + resultsException.getMessage();
+
+            System.out.println(error);
+        }
+        return Integer.parseInt(null);
+    }
+
 
 }
