@@ -71,7 +71,7 @@ public class Courses {
     public String delete(@FormDataParam("courseId") Integer id, @CookieParam("token") String cookie) {
         try {
             if (id == null) {
-                throw new Exception("One or more form data parameters are missing in the HTTP request.");
+                throw new Exception("Form data parameter is missing in the HTTP request.");
             }
             PreparedStatement ps1 = Main.db.prepareStatement("SELECT UserID From Courses Where CourseID = ?");
             ps1.setInt(1, id);
