@@ -73,14 +73,21 @@ public class Courses {
             if (id == null) {
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
-            if (validateSessionCookie(cookie) == null){
-
+            PreparedStatement ps1 = Main.db.prepareStatement("SELECT UserID From Courses Where CourseID = ?");
+            ps1.setInt(1, id);
+            ResultSet results = ps1.executeQuery();
+            int userID = results.getInt(1);
+            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+                return "{\"error\": \"user not logged in.\"}";
+            } else if (validateSessionCookie(cookie) == userID){
+                System.out.println("courses/delete id=" + id);
+                PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Courses where CourseID == ?");
+                ps.setInt(1, id);
+                ps.execute();
+                return "{\"status\": \"OK\"}";
+            }else {
+                return "{\"error\": \"user does not correspond to the creator of this course.\"}";
             }
-            System.out.println("courses/delete id=" + id);
-            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Courses where CourseID == ?");
-            ps.setInt(1, id);
-            ps.execute();
-            return "{\"status\": \"OK\"}";
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
             return "{\"error\": \"Unable to delete item, please see server console for more info.\"}";
@@ -183,17 +190,27 @@ public class Courses {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String updateName(
-            @FormDataParam("courseId") Integer id, @FormDataParam("name") String coursename){
+            @FormDataParam("courseId") Integer id, @FormDataParam("name") String coursename, @CookieParam("token") String cookie){
         try {
             if (id == null || coursename == null) {
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
-            System.out.println("courses/update id=" + id);
-            PreparedStatement ps = Main.db.prepareStatement("UPDATE Courses SET CourseName = ? WHERE CourseID = ?");
-            ps.setString(1, (coursename));
-            ps.setInt(2, (id));
-            ps.execute();
-            return "{\"status\": \"OK\"}";
+            PreparedStatement ps1 = Main.db.prepareStatement("SELECT UserID From Courses Where CourseID = ?");
+            ps1.setInt(1, id);
+            ResultSet results = ps1.executeQuery();
+            int userID = results.getInt(1);
+            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+                return "{\"error\": \"user not logged in.\"}";
+            } else if (validateSessionCookie(cookie) == userID){
+                System.out.println("courses/update id=" + id);
+                PreparedStatement ps = Main.db.prepareStatement("UPDATE Courses SET CourseName = ? WHERE CourseID = ?");
+                ps.setString(1, (coursename));
+                ps.setInt(2, (id));
+                ps.execute();
+                return "{\"status\": \"OK\"}";
+            } else{
+                return "{\"error\": \"user does not correspond to the creator of this course.\"}";
+            }
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
             return "{\"error\": \"Unable to update item, please see server console for more info.\"}";

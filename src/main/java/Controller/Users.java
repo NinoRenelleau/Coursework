@@ -208,31 +208,75 @@ public class Users {
         }
     }
 
-    public static void updatePassword(int UserID, String newPassword){
+    @POST
+    @Path("logout")
+    public void logout(@CookieParam("token") String token) {
+
+        System.out.println("/Users/logout - Logging out user");
+
         try {
-            PreparedStatement ps = Main.db.prepareStatement("UPDATE Users SET Password = ? where UserID = ?");
-            ps.setInt(2, UserID);
-            ps.setString(1, newPassword);
-            ps.executeUpdate();
+            PreparedStatement statement = Main.db.prepareStatement("Update Users SET token = NULL WHERE token = ?");
+            statement.setString(1, token);
+            statement.executeUpdate();
+        } catch (Exception resultsException) {
+            String error = "Database error - can't update 'Users' table: " + resultsException.getMessage();
+            System.out.println(error);
+        }
+
+    }
+
+    @POST
+    @Path("updatePassword")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String updatePassword(
+            @FormDataParam("UsersId") Integer id, @FormDataParam("NewPassword") String password, @CookieParam("token") String cookie){
+        try {
+            if (id == null || password == null) {
+                throw new Exception("One or more form data parameters are missing in the HTTP request.");
+            }
+            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+                return "{\"error\": \"user not logged in.\"}";
+            } else if (validateSessionCookie(cookie) == id){
+                System.out.println("users/updatePassword ");
+                PreparedStatement ps = Main.db.prepareStatement("UPDATE Users SET Password = ? where UserID = ?");
+                ps.setString(1, password);
+                ps.setInt(2, id);
+                ps.executeUpdate();
+                return "{\"status\": \"OK\"}";
+            } else{
+                return "{\"error\": \"session token does not correspond to that of the user being updated.\"}";
+            }
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to update item, please see server console for more info.\"}";
         }
     }
-    public static void updateScore(int userID){
+    @POST
+    @Path("updateScore")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String updateScore(
+            @FormDataParam("UsersId") Integer id, @CookieParam("token") String cookie){
         try {
-            int newScore = 0;
-            PreparedStatement lookupScore = Main.db.prepareStatement("SELECT Score FROM History WHERE UserID = ?");
-            lookupScore.setInt(1, userID);
-            ResultSet results = lookupScore.executeQuery();
-            while (results.next()) {
-                newScore += results.getInt(1);
+            if (id == null) {
+                throw new Exception("form data parameter is missing in the HTTP request.");
             }
-            PreparedStatement ps = Main.db.prepareStatement("UPDATE Users SET Score = ? where UserID = ?");
-            ps.setInt(2, userID);
-            ps.setInt(1, newScore);
-            ps.executeUpdate();
+            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+                return "{\"error\": \"user not logged in.\"}";
+            } else if (validateSessionCookie(cookie) == id){
+                System.out.println("users/updateScore ");
+                PreparedStatement ps = Main.db.prepareStatement("UPDATE Users SET Score = (SELECT SUM(Score) FROM History WHERE UserID = ?) where UserID = ?");
+                ps.setInt(1, id);
+                ps.setInt(2, id);
+                ps.executeUpdate();
+                return "{\"status\": \"OK\"}";
+            } else{
+                return "{\"error\": \"session token does not correspond to that of the user being updated.\"}";
+            }
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to update item, please see server console for more info.\"}";
         }
     }
 
@@ -332,22 +376,21 @@ public class Users {
         return errors;
     }
 
-    public static String validateSessionCookie(String token) {
+    public static int validateSessionCookie(String token) {
         try {
             PreparedStatement statement = Main.db.prepareStatement(
-                    "SELECT Username FROM Admins WHERE SessionToken = ?"
-            );
+                    "SELECT UserID FROM Users WHERE SessionToken = ?");
             statement.setString(1, token);
             ResultSet results = statement.executeQuery();
             if (results != null && results.next()) {
-                return results.getString("Username").toLowerCase();
+                return results.getInt(1);
             }
         } catch (Exception resultsException) {
             String error = "Database error - can't select by id from 'Admins' table: " + resultsException.getMessage();
 
             System.out.println(error);
         }
-        return null;
+        return Integer.parseInt(null);
     }
 
 
