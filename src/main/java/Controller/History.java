@@ -14,21 +14,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+
+@SuppressWarnings("unchecked")
+@Path("history/")
 public class History {
-    public static void create(int userID, int quizID, int score, int review){
-        try {
-
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO History (userID, QuizID, Score, Review) VALUES (?, ?, ?, ?)");
-            ps.setInt(1, userID);
-            ps.setInt(2, quizID);
-            ps.setInt(3, score);
-            ps.setInt(4, review);
-            ps.executeUpdate();
-
-        } catch (Exception exception) {
-            System.out.println("Database error: " + exception.getMessage());
-        }
-    }
 
     @POST
     @Path("update")
@@ -70,23 +59,27 @@ public class History {
         }
     }
 
-    public static void averageReview(){
+    @POST
+    @Path("updateRatings")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String updateRatings(){
         try {
-            PreparedStatement ps = Main.db.prepareStatement(
-                    "SELECT QuizID FROM Quizzes");
-            ResultSet results = ps.executeQuery();
+            PreparedStatement ps1 = Main.db.prepareStatement("SELECT QuizID FROM Quizzes");
+            ResultSet results = ps1.executeQuery();
             while (results.next()){
-                int rating = 0;
-                int num = 0;
-                PreparedStatement ps2 = Main.db.prepareStatement(
+                System.out.println("history/update");
+                PreparedStatement ps = Main.db.prepareStatement(
                         "UPDATE Quizzes SET Rating = " +
                                 "(SELECT AVG(Review) FROM History WHERE QuizID = ?) WHERE QuizID = ?");
-                ps2.setInt(1, results.getInt(1));
-                ps2.setInt(2, results.getInt(1));
-                ps2.executeUpdate();
+                ps.setInt(1, results.getInt(1));
+                ps.setInt(2, results.getInt(1));
+                ps.executeUpdate();
             }
+            return "{\"status\": \"OK\"}";
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to update item, please see server console for more info.\"}";
         }
     }
 
