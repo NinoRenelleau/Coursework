@@ -1,9 +1,18 @@
 package Controller;
 
 import Server.Main;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
+import javax.ws.rs.*;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class History {
     public static void create(int userID, int quizID, int score, int review){
@@ -21,18 +30,43 @@ public class History {
         }
     }
 
-    public static void update(int userID, int quizID, int score, int review){
+    @POST
+    @Path("update")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String update(
+            @FormDataParam("QuizID") Integer quizID, @FormDataParam("Score") Integer score, @FormDataParam("Review") Integer review, @CookieParam("token") String cookie){
         try {
-
-            PreparedStatement ps = Main.db.prepareStatement("UPDATE History SET Score = ?, Review = ? WHERE UserID = ?, QuizID = ?");
-            ps.setInt(3, userID);
-            ps.setInt(4, quizID);
-            ps.setInt(1, score);
-            ps.setInt(2, review);
-            ps.executeUpdate();
+            if (quizID == null || score == null || review == null) {
+                throw new Exception("One or more form data parameters are missing in the HTTP request.");
+            }
+            PreparedStatement ps1 = Main.db.prepareStatement("SELECT EXISTS(SELECT * From History WHERE UserID = ? AND QuizID = ?)");
+            ps1.setInt(1, validateSessionCookie(cookie));
+            ps1.setInt(2, quizID);
+            ResultSet results = ps1.executeQuery();
+            if (results.getBoolean(1) == false){
+                System.out.println("history/create");
+                PreparedStatement ps = Main.db.prepareStatement("INSERT INTO History (userID, QuizID, Score, Review) VALUES (?, ?, ?, ?)");
+                ps.setInt(1, validateSessionCookie(cookie));
+                ps.setInt(2, quizID);
+                ps.setInt(3, score);
+                ps.setInt(4, review);
+                ps.executeUpdate();
+                return "{\"status\": \"OK\"}";
+            } else{
+                System.out.println("history/update");
+                PreparedStatement ps = Main.db.prepareStatement("UPDATE History SET Score = ?, Review = ? WHERE UserID = ?, QuizID = ?");
+                ps.setInt(3, validateSessionCookie(cookie));
+                ps.setInt(4, quizID);
+                ps.setInt(1, score);
+                ps.setInt(2, review);
+                ps.executeUpdate();
+                return "{\"status\": \"OK\"}";
+            }
 
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to update item, please see server console for more info.\"}";
         }
     }
 
@@ -56,41 +90,75 @@ public class History {
         }
     }
 
-    public static int totalCourseScore(int userID, int courseID){
-        int total=0;
+    @GET
+    @Path("courseScore")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String totalCourseScore(@FormDataParam("courseID") Integer courseID, @FormDataParam("UserID") Integer userID){
+        System.out.println("history/totalCourseScore");
+        JSONObject item = new JSONObject();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT QuizID FROM Quizzes WHERE CourseID = ?");
-            ps.setInt(1, courseID);
-            ResultSet results = ps.executeQuery();
-            while(results.next()){
-                PreparedStatement ps2 = Main.db.prepareStatement("SELECT Score FROM History WHERE ((QuizID = ?) AND (UserID = ?)) ");
-                ps2.setInt(1, results.getInt(1));
-                ps2.setInt(2, userID);
-                ResultSet results2 = ps2.executeQuery();
-                while(results2.next()){
-                    total += results2.getInt(1);
-                }
+            if (courseID == null || userID == null) {
+                throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
-
-        } catch (Exception exception) {
-            System.out.println("Database error: " + exception.getMessage());
-        }
-        return total;
-    }
-
-    public static void list(){
-        try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM History");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT SUM(Score) FROM History INNER JOIN Quizzes ON Quizzes.QuizID = History.QuizID WHERE Quizzes.CourseID = ? AND History.UserID = ?");
+            ps.setInt(1, courseID);
+            ps.setInt(1, userID);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                int UserID = results.getInt(1);
-                int QuizID = results.getInt(2);
-                int score = results.getInt(3);
-                int review = results.getInt(4);
-                System.out.println("User ID: " + UserID + " Quiz ID: " + QuizID + " Score: " + score + " Review: " + review);
+                item.put("Score", results.getInt(1));
+            }
+            return item.toString();
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
+        }
+    }
+    @GET
+    @Path("list")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String list(@CookieParam("token") String cookie){
+        System.out.println("history/list");
+        JSONArray list = new JSONArray();
+        try {
+            if (cookie == null) {
+                throw new Exception("Token is missing from the HTTP request.");
+            }
+            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+                return "{\"error\": \"user not logged in.\"}";
+            } else {
+                PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM History Where UserID = ?");
+                ps.setInt(1, validateSessionCookie(cookie));
+                ResultSet results = ps.executeQuery();
+                while (results.next()) {
+                    JSONObject item = new JSONObject();
+                    item.put("User ID", results.getInt(1));
+                    item.put("Quiz ID", results.getInt(2));
+                    item.put("score", results.getInt(3));
+                    item.put("review", results.getInt(4));
+                    list.add(item);
+                }
+                return list.toString();
             }
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return"{\"error\": \"Unable to list items, please see server console for more info.\"}";
         }
+    }
+
+    public static int validateSessionCookie(String token) {
+        try {
+            PreparedStatement statement = Main.db.prepareStatement(
+                    "SELECT UserID FROM Users WHERE SessionToken = ?");
+            statement.setString(1, token);
+            ResultSet results = statement.executeQuery();
+            if (results != null && results.next()) {
+                return results.getInt(1);
+            }
+        } catch (Exception resultsException) {
+            String error = "Database error - can't select by id from 'Admins' table: " + resultsException.getMessage();
+
+            System.out.println(error);
+        }
+        return Integer.parseInt(null);
     }
 }
