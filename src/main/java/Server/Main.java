@@ -17,21 +17,28 @@ public class Main {
 
     public static void main(String[] args) {
         openDatabase("Project-quiz.db");
-
+        //Connect to the database file
         ResourceConfig config = new ResourceConfig();
+        //Prepares the Jersey Servlet
         config.packages("Controller");
+        //Uses the handlers in the 'Controller' package
         config.register(MultiPartFeature.class);
+        //Supports multipart HTML forms
         Server server = new Server(8081);
+        //Instantiate the Servlet
 
         ServletHolder servlet = new ServletHolder(new ServletContainer(config));
+        //Prepares the Jetty Server to listen on port 8081
         ServletContextHandler context = new ServletContextHandler(server, "/");
+        //Instantiate the server
         context.addServlet(servlet, "/*");
+        //Connect the Servlet to the Server
          try{
-             server.start();
-             System.out.println("Server successfully started.");
-             server.join();
+             server.start();//Starts the server
+             System.out.println("Server successfully started.");//Success message
+             server.join();//The program waits here indefinitely
          } catch (Exception e){
-             e.printStackTrace();
+             e.printStackTrace();// error catching
          }
     }
 

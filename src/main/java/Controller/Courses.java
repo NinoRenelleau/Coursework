@@ -46,13 +46,17 @@ public class Courses {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(
-            @FormDataParam("userId") Integer id, @FormDataParam("coursename") String coursename, @FormDataParam("tags") String tags){
+            @FormDataParam("userId") Integer id,
+            @FormDataParam("coursename") String coursename,
+            @FormDataParam("tags") String tags){
         try {
             if (id == null || coursename == null || tags == null){
-                throw new Exception("One or more form data parameters are missing in the HTTP request.");
+                throw new Exception(
+                        "One or more form data parameters are missing in the HTTP request.");
             }
             System.out.println("courses/create");
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Courses (CourseName, Tags, UserID) VALUES (?, ?, ?)");
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "INSERT INTO Courses (CourseName, Tags, UserID) VALUES (?, ?, ?)");
             ps.setString(1, coursename);
             ps.setString(2, tags);
             ps.setInt(3, id);
