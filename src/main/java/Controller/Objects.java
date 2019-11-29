@@ -1,88 +1,134 @@
 package Controller;
 
 import Server.Main;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
+import javax.ws.rs.*;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.UUID;
+
+@SuppressWarnings("unchecked")
+@Path("objects/")
 
 public class Objects {
-    public static String getCoordinates(int objectID){
-        String coordinates = "";
+
+    @GET
+    @Path("getCoordinates/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getCoordinates(@PathParam("id") Integer id){
+        System.out.println("Objects/getCoordinates" + id);
+        JSONObject item = new JSONObject();
         try {
+            if (id == null) {
+                throw new Exception("Object ID is missing in the HTTP request's URL.");
+            }
             PreparedStatement ps = Main.db.prepareStatement("SELECT Coordinates FROM Object WHERE ObjectID == ?");
-            ps.setInt(1, objectID);
+            ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
-            while (results.next()){
-                coordinates = results.getString(1);
+            if (results.next()) {
+                item.put("Cooridnates", results.getString(1));
             }
-
+            return item.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
-        return coordinates;
     }
 
-    public static String getType(int objectID){
-        String objectType = "";
+    @GET
+    @Path("getTypes/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getTypes(@PathParam("id") Integer id){
+        System.out.println("Objects/getCoordinates" + id);
+        JSONObject item = new JSONObject();
         try {
+            if (id == null) {
+                throw new Exception("Object ID is missing in the HTTP request's URL.");
+            }
             PreparedStatement ps = Main.db.prepareStatement("SELECT ObjectType FROM Object WHERE ObjectID == ?");
-            ps.setInt(1, objectID);
+            ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
-            while (results.next()){
-                objectType = results.getString(1);
+            if (results.next()) {
+                item.put("Type", results.getString(1));
             }
-
+            return item.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
-        return objectType;
     }
 
-    public static void create(int templateID, String type, String coordinates){
+    @POST
+    @Path("create")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String create(
+            @FormDataParam("TemplateId") Integer id, @FormDataParam("type") String type, @FormDataParam("coordinates") String coordinates){
         try {
+            if (id == null || type == null || coordinates == null){
+                throw new Exception("One or more form data parameters are missing in the HTTP request.");
+            }
+            System.out.println("objects/create");
             PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Object (QuestionTemplateID, ObjectType, Coordinates) VALUES (?, ?, ?)");
-            ps.setInt(1, templateID);
+            ps.setInt(1, id);
             ps.setString(2, type);
             ps.setString(3, coordinates);
-
             ps.executeUpdate();
-
+            return "{\"status\": \"OK\"}";
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to create new item, please see server console for more info.\"}";
         }
     }
 
-    public static String list(){
-        int ObjectID = 0;
-        int QuestionTemplateID = 0;
-        String ObjectType = "";
-        String Coordinates = "";
+    @GET
+    @Path("list")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String list(){
+        System.out.println("objects/list");
+        JSONArray list = new JSONArray();
         try {
             PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Objects");
             ResultSet results = ps.executeQuery();
-            while (results.next()){
-                ObjectID = results.getInt(1);
-                QuestionTemplateID = results.getInt(2);
-                ObjectType = results.getString(3);
-                Coordinates = results.getString(4);
+            while (results.next()) {
+                JSONObject item = new JSONObject();
+                item.put("Object ID", results.getInt(1));
+                item.put("Template ID", results.getInt(2));
+                item.put("Type", results.getString(3));
+                item.put("coordinates", results.getString(4));
+                list.add(item);
             }
-
+            return list.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return"{\"error\": \"Unable to list items, please see server console for more info.\"}";
         }
-        return (ObjectID + "," + QuestionTemplateID + "," + ObjectType + "," + Coordinates);
     }
 
-    public static void delete(int objectID){
+    @POST
+    @Path("delete")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String delete(@FormDataParam("objectId") Integer id) {
         try {
-
+            if (id == null) {
+                throw new Exception("Form data parameter is missing in the HTTP request.");
+            }
+            System.out.println("objects/delete id=" + id);
             PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Objectss WHERE ObjectID = ?");
-            ps.setInt(1, objectID);
+            ps.setInt(1, id);
             ps.executeUpdate();
-
+            return "{\"status\": \"OK\"}";
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to delete item, please see server console for more info.\"}";
         }
     }
+
 
 }

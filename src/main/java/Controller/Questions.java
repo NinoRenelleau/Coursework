@@ -116,19 +116,27 @@ public class Questions {
         }
     }
 
-    public static int getTemplateID(int questionID){
-        int templateID = 0;
+    @GET
+    @Path("getTemplate/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getTemplate(@PathParam("id") Integer id){
+        System.out.println("questions/getTemplate" + id);
+        JSONObject item = new JSONObject();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT QuestionTemplateID FROM Questions WHERE QuestionID = ?");
-            ps.setInt(1, questionID);
-            ResultSet result = ps.executeQuery();
-            while(result.next()){
-                templateID = result.getInt(1);
+            if (id == null) {
+                throw new Exception("Question ID is missing in the HTTP request's URL.");
             }
+            PreparedStatement ps = Main.db.prepareStatement("SELECT QuestionTemplateID FROM Questions WHERE QuestionID = ?");
+            ps.setInt(1, id);
+            ResultSet results = ps.executeQuery();
+            if (results.next()) {
+                item.put("TemplateID", results.getString(1));
+            }
+            return item.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
-        return templateID;
     }
 
     public static int validateSessionCookie(String token) {

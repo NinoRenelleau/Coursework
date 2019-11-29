@@ -93,17 +93,35 @@ public class Quizzes {
         }
     }
 
-    public static void update(int quizID, String quizName){
+    @POST
+    @Path("update")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String update(
+            @FormDataParam("QuizId") Integer id, @FormDataParam("name") String quizName, @CookieParam("token") String cookie){
         try {
-
-            PreparedStatement ps = Main.db.prepareStatement("UPDATE Quizzes SET QuizName = ? WHERE QuizID = ?");
-            ps.setString(1, quizName);
-            ps.setInt(2, quizID);
-
-            ps.executeUpdate();
-
+            if (id == null || quizName == null) {
+                throw new Exception("One or more form data parameters are missing in the HTTP request.");
+            }
+            PreparedStatement ps1 = Main.db.prepareStatement("SELECT UserID From Courses INNER JOIN Quizzes ON Courses.CourseID = Quizzes.CourseID Where QuizID = ?");
+            ps1.setInt(1, id);
+            ResultSet results = ps1.executeQuery();
+            int userID = results.getInt(1);
+            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+                return "{\"error\": \"user not logged in.\"}";
+            } else if (validateSessionCookie(cookie) == userID){
+                System.out.println("quizzes/update id=" + id);
+                PreparedStatement ps = Main.db.prepareStatement("UPDATE Quizzes SET QuizName = ? WHERE QuizID = ?");
+                ps.setString(1, (quizName));
+                ps.setInt(2, (id));
+                ps.execute();
+                return "{\"status\": \"OK\"}";
+            } else{
+                return "{\"error\": \"user does not correspond to the creator of this quiz.\"}";
+            }
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to update item, please see server console for more info.\"}";
         }
     }
 
