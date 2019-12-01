@@ -23,8 +23,9 @@ public class Courses {
         System.out.println("courses/list");
         JSONArray list = new JSONArray();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Courses.Tags " +
-                    "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID");
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "SELECT CourseID, Username, CourseName, Courses.Tags " +
+                            "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID");
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 JSONObject item = new JSONObject();
@@ -55,13 +56,17 @@ public class Courses {
                         "One or more form data parameters are missing in the HTTP request.");
             }
             System.out.println("courses/create");
-            PreparedStatement ps = Main.db.prepareStatement(
-                    "INSERT INTO Courses (CourseName, Tags, UserID) VALUES (?, ?, ?)");
-            ps.setString(1, coursename);
-            ps.setString(2, tags);
-            ps.setInt(3, id);
-            ps.execute();
-            return "{\"status\": \"OK\"}";
+            if(nameExists(coursename)){
+                return "{\"error\": \"Course name already exists.\"}";
+            } else{
+                PreparedStatement ps = Main.db.prepareStatement(
+                        "INSERT INTO Courses (CourseName, Tags, UserID) VALUES (?, ?, ?)");
+                ps.setString(1, coursename);
+                ps.setString(2, tags);
+                ps.setInt(3, id);
+                ps.execute();
+                return "{\"status\": \"OK\"}";
+            }
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
             return "{\"error\": \"Unable to create new item, please see server console for more info.\"}";
@@ -72,7 +77,7 @@ public class Courses {
     @Path("delete")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public String delete(@FormDataParam("courseId") Integer id, @CookieParam("token") String cookie) {
+    public String delete(@FormDataParam("courseID") Integer id, @CookieParam("token") String cookie) {
         try {
             if (id == null) {
                 throw new Exception("Form data parameter is missing in the HTTP request.");
@@ -81,7 +86,7 @@ public class Courses {
             ps1.setInt(1, id);
             ResultSet results = ps1.executeQuery();
             int userID = results.getInt(1);
-            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+            if (validateSessionCookie(cookie) == 0){
                 return "{\"error\": \"user not logged in.\"}";
             } else if (validateSessionCookie(cookie) == userID){
                 System.out.println("courses/delete id=" + id);
@@ -194,7 +199,7 @@ public class Courses {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String updateName(
-            @FormDataParam("courseId") Integer id, @FormDataParam("name") String coursename, @CookieParam("token") String cookie){
+            @FormDataParam("courseID") Integer id, @FormDataParam("name") String coursename, @CookieParam("token") String cookie){
         try {
             if (id == null || coursename == null) {
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
@@ -203,15 +208,19 @@ public class Courses {
             ps1.setInt(1, id);
             ResultSet results = ps1.executeQuery();
             int userID = results.getInt(1);
-            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+            if (validateSessionCookie(cookie) == 0){
                 return "{\"error\": \"user not logged in.\"}";
             } else if (validateSessionCookie(cookie) == userID){
-                System.out.println("courses/update id=" + id);
-                PreparedStatement ps = Main.db.prepareStatement("UPDATE Courses SET CourseName = ? WHERE CourseID = ?");
-                ps.setString(1, (coursename));
-                ps.setInt(2, (id));
-                ps.execute();
-                return "{\"status\": \"OK\"}";
+                if(nameExists(coursename)){
+                    return "{\"error\": \"Course name already exists.\"}";
+                } else{
+                    System.out.println("courses/update id=" + id);
+                    PreparedStatement ps = Main.db.prepareStatement("UPDATE Courses SET CourseName = ? WHERE CourseID = ?");
+                    ps.setString(1, (coursename));
+                    ps.setInt(2, (id));
+                    ps.execute();
+                    return "{\"status\": \"OK\"}";
+                }
             } else{
                 return "{\"error\": \"user does not correspond to the creator of this course.\"}";
             }
@@ -254,19 +263,36 @@ public class Courses {
     public static int validateSessionCookie(String token) {
         try {
             PreparedStatement statement = Main.db.prepareStatement(
-                    "SELECT UserID FROM Users WHERE SessionToken = ?");
+                    "SELECT UserID FROM Users WHERE token = ?");
             statement.setString(1, token);
             ResultSet results = statement.executeQuery();
             if (results != null && results.next()) {
                 return results.getInt(1);
             }
         } catch (Exception resultsException) {
-            String error = "Database error - can't select by id from 'Admins' table: " + resultsException.getMessage();
+            String error = "Database error - can't select by id from 'Users' table: " + resultsException.getMessage();
 
             System.out.println(error);
         }
-        return Integer.parseInt(null);
+        return 0;
     }
 
+    public static boolean nameExists(String name){
+        boolean found = false;
+        try {
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "Select Exists(SELECT * FROM Courses WHERE CourseName == ?)");
+            ps.setString(1, name);
+            ResultSet results = ps.executeQuery();
+            if (results.getBoolean(1) == true){
+                found = true;
+            } else{
+                found = false;
+            }
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+        }
+        return found;
+    }
 
 }

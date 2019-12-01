@@ -116,7 +116,7 @@ public class History {
             if (cookie == null) {
                 throw new Exception("Token is missing from the HTTP request.");
             }
-            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+            if (validateSessionCookie(cookie) == 0){
                 return "{\"error\": \"user not logged in.\"}";
             } else {
                 PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM History Where UserID = ?");
@@ -141,17 +141,17 @@ public class History {
     public static int validateSessionCookie(String token) {
         try {
             PreparedStatement statement = Main.db.prepareStatement(
-                    "SELECT UserID FROM Users WHERE SessionToken = ?");
+                    "SELECT UserID FROM Users WHERE token = ?");
             statement.setString(1, token);
             ResultSet results = statement.executeQuery();
             if (results != null && results.next()) {
                 return results.getInt(1);
             }
         } catch (Exception resultsException) {
-            String error = "Database error - can't select by id from 'Admins' table: " + resultsException.getMessage();
+            String error = "Database error - can't select by id from 'Users' table: " + resultsException.getMessage();
 
             System.out.println(error);
         }
-        return Integer.parseInt(null);
+        return 0;
     }
 }

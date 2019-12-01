@@ -61,10 +61,10 @@ public class Users {
                 throw new Exception("A form parameter is missing in the HTTP request's URL.");
             }
             if (!usernameExists(username)){
-                throw new Exception("The username in the HTTP request's URL, does not exist.");
+                return "{\"error\": \"The username in the HTTP request's URL, does not exist.\"}";
             }
             if (!passwordExists(username, password)){
-                throw new Exception("The password in the HTTP request's URL, is wrong");
+                return "{\"error\": \"The password in the HTTP request's URL, is wrong.\"}";
             }
             PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score " +
                     "FROM Users WHERE (Username = ?) AND (Password = ?) ");
@@ -181,26 +181,25 @@ public class Users {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(
-            @FormDataParam("username") String username, @FormDataParam("password") String password, @FormDataParam("UserType") String userType, @FormDataParam("tags") String tags){
+            @FormDataParam("username") String username, @FormDataParam("password") String password, @FormDataParam("userType") String userType, @FormDataParam("tags") String tags){
         try {
             if (username == null || password == null || tags == null || userType == null){
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
             System.out.println("users/create");
             if(!((usernameValid(username) == null) && (passwordValid(password) == null) && (userTypeValid(userType) == null))){
-                //throw new Exception(usernameValid(username) + "\r\n" + passwordValid(password) + "\r\n" + userTypeValid(userType));
                 String message = usernameValid(username) + "\r\n" + passwordValid(password) + "\r\n" + userTypeValid(userType);
                 return "{\"error\":\""+ message +"\"}";
             } else{
+
                 PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Users " +
                         "(Username, Password, UserType, Tags) VALUES (?, ?, ?, ?)");
                 ps.setString(1, username);
                 ps.setString(2, password);
                 ps.setString(3, userType);
-                ps.setString(4, tags);
+                ps.setString(4, prepareTags(tags));
                 ps.execute();
             }
-
             return "{\"status\": \"OK\"}";
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
@@ -235,7 +234,7 @@ public class Users {
             if (id == null || password == null) {
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
-            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+            if (validateSessionCookie(cookie) == 0){
                 return "{\"error\": \"user not logged in.\"}";
             } else if (validateSessionCookie(cookie) == id){
                 System.out.println("users/updatePassword ");
@@ -262,7 +261,7 @@ public class Users {
             if (id == null) {
                 throw new Exception("form data parameter is missing in the HTTP request.");
             }
-            if (validateSessionCookie(cookie) == Integer.parseInt(null)){
+            if (validateSessionCookie(cookie) == 0){
                 return "{\"error\": \"user not logged in.\"}";
             } else if (validateSessionCookie(cookie) == id){
                 System.out.println("users/updateScore ");
@@ -330,8 +329,9 @@ public class Users {
         }
         if (valid == false){
             System.out.println("Inputted username is invalid; " + errors);
+            return errors;
         }
-        return errors;
+        return null;
     }
 
     private static List passwordValid(String password){
@@ -361,8 +361,9 @@ public class Users {
         }
         if (valid == false){
             System.out.println("Inputted password is invalid: " + errors);
+            return errors;
         }
-        return errors;
+        return null;
     }
 
     private static List userTypeValid(String userType){
@@ -372,25 +373,42 @@ public class Users {
             valid = false;
             System.out.println("Inputted userType is invalid: must be either 'teacher' or 'student'");
             errors.add("Inputted userType is invalid: must be either 'teacher' or 'student'");
+            return errors;
         }
-        return errors;
+        return null;
     }
 
     public static int validateSessionCookie(String token) {
         try {
             PreparedStatement statement = Main.db.prepareStatement(
-                    "SELECT UserID FROM Users WHERE SessionToken = ?");
+                    "SELECT UserID FROM Users WHERE token = ?");
             statement.setString(1, token);
             ResultSet results = statement.executeQuery();
             if (results != null && results.next()) {
                 return results.getInt(1);
             }
         } catch (Exception resultsException) {
-            String error = "Database error - can't select by id from 'Admins' table: " + resultsException.getMessage();
+            String error = "Database error - can't select by id from 'Users' table: " + resultsException.getMessage();
 
             System.out.println(error);
         }
-        return Integer.parseInt(null);
+        return 0;
+    }
+
+    public static String prepareTags(String tags){
+        System.out.println(tags);
+        String newTags = "";
+        int length = tags.length();
+        for(int x = 0; x < (length); x++){
+            if(tags.charAt(x) == ' '){
+                newTags += ';';
+            }else{
+                newTags += tags.charAt(x);
+            }
+        }
+        newTags += ';';
+        System.out.println(newTags);
+        return newTags;
     }
 
 
