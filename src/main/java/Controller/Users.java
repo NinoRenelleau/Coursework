@@ -224,6 +224,32 @@ public class Users {
 
     }
 
+    @GET
+    @Path("check")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String checkLogin(@CookieParam("sessionToken") String token) {
+
+        System.out.println("/users/check - Checking user against database");
+
+        int currentUser = validateSessionCookie(token);
+
+        if (currentUser == 0) {
+            System.out.println("Error: Invalid user session token");
+            return "{\"error\": \"Invalid user session token\"}";
+        } else {
+            try{
+                PreparedStatement ps = Main.db.prepareStatement("Select Username From Users Where UserID = ?");
+                ps.setInt(1, currentUser);
+                ResultSet results = ps.executeQuery();
+                return "{\"username\": \"" + currentUser + "\"}";
+            } catch (Exception exception) {
+                System.out.println("Database error: " + exception.getMessage());
+                return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
+            }
+
+        }
+    }
+
     @POST
     @Path("updatePassword")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
