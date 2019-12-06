@@ -230,18 +230,18 @@ public class Users {
     public String checkLogin(@CookieParam("sessionToken") String token) {
 
         System.out.println("/users/check - Checking user against database");
-
-        int currentUser = validateSessionCookie(token);
-
-        if (currentUser == 0) {
+        JSONObject item = new JSONObject();
+        if (validateSessionCookie(token) == null) {
             System.out.println("Error: Invalid user session token");
             return "{\"error\": \"Invalid user session token\"}";
         } else {
             try{
-                PreparedStatement ps = Main.db.prepareStatement("Select Username From Users Where UserID = ?");
-                ps.setInt(1, currentUser);
+                PreparedStatement ps = Main.db.prepareStatement("Select Username, Tags From Users Where UserID = ?");
+                ps.setInt(1, validateSessionCookie(token));
                 ResultSet results = ps.executeQuery();
-                return "{\"username\": \"" + currentUser + "\"}";
+                item.put("username", results.getString(1));
+                item.put("Tags", results.getString(2));
+                return item.toString();
             } catch (Exception exception) {
                 System.out.println("Database error: " + exception.getMessage());
                 return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
@@ -260,7 +260,7 @@ public class Users {
             if (id == null || password == null) {
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
-            if (validateSessionCookie(cookie) == 0){
+            if (validateSessionCookie(cookie) == null){
                 return "{\"error\": \"user not logged in.\"}";
             } else if (validateSessionCookie(cookie) == id){
                 System.out.println("users/updatePassword ");
@@ -277,6 +277,35 @@ public class Users {
             return "{\"error\": \"Unable to update item, please see server console for more info.\"}";
         }
     }
+
+    @POST
+    @Path("updateTags")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String updateTags(
+            @FormDataParam("UsersId") Integer id, @FormDataParam("newTag") String tag, @CookieParam("token") String cookie){
+        try {
+            if (id == null || tag == null) {
+                throw new Exception("One or more form data parameters are missing in the HTTP request.");
+            }
+            if (validateSessionCookie(cookie) == null){
+                return "{\"error\": \"user not logged in.\"}";
+            } else if (validateSessionCookie(cookie) == id){
+                System.out.println("users/updateTags ");
+                PreparedStatement ps = Main.db.prepareStatement("UPDATE Users SET Tags = ? where UserID = ?");
+                ps.setString(1, tag);
+                ps.setInt(2, id);
+                ps.executeUpdate();
+                return "{\"status\": \"OK\"}";
+            } else{
+                return "{\"error\": \"session token does not correspond to that of the user being updated.\"}";
+            }
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to update item, please see server console for more info.\"}";
+        }
+    }
+
     @POST
     @Path("updateScore")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -287,7 +316,7 @@ public class Users {
             if (id == null) {
                 throw new Exception("form data parameter is missing in the HTTP request.");
             }
-            if (validateSessionCookie(cookie) == 0){
+            if (validateSessionCookie(cookie) == null){
                 return "{\"error\": \"user not logged in.\"}";
             } else if (validateSessionCookie(cookie) == id){
                 System.out.println("users/updateScore ");
@@ -404,7 +433,7 @@ public class Users {
         return null;
     }
 
-    public static int validateSessionCookie(String token) {
+    public static Integer validateSessionCookie(String token) {
         try {
             PreparedStatement statement = Main.db.prepareStatement(
                     "SELECT UserID FROM Users WHERE token = ?");
@@ -418,7 +447,7 @@ public class Users {
 
             System.out.println(error);
         }
-        return 0;
+        return null;
     }
 
     public static String prepareTags(String tags){

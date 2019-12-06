@@ -62,7 +62,7 @@ public class Courses {
                 PreparedStatement ps = Main.db.prepareStatement(
                         "INSERT INTO Courses (CourseName, Tags, UserID) VALUES (?, ?, ?)");
                 ps.setString(1, coursename);
-                ps.setString(2, tags);
+                ps.setString(2, prepareTags(tags));
                 ps.setInt(3, id);
                 ps.execute();
                 return "{\"status\": \"OK\"}";
@@ -86,7 +86,7 @@ public class Courses {
             ps1.setInt(1, id);
             ResultSet results = ps1.executeQuery();
             int userID = results.getInt(1);
-            if (validateSessionCookie(cookie) == 0){
+            if (validateSessionCookie(cookie) == null){
                 return "{\"error\": \"user not logged in.\"}";
             } else if (validateSessionCookie(cookie) == userID){
                 System.out.println("courses/delete id=" + id);
@@ -208,7 +208,7 @@ public class Courses {
             ps1.setInt(1, id);
             ResultSet results = ps1.executeQuery();
             int userID = results.getInt(1);
-            if (validateSessionCookie(cookie) == 0){
+            if (validateSessionCookie(cookie) == null){
                 return "{\"error\": \"user not logged in.\"}";
             } else if (validateSessionCookie(cookie) == userID){
                 if(nameExists(coursename)){
@@ -260,7 +260,7 @@ public class Courses {
         }
     }
 
-    public static int validateSessionCookie(String token) {
+    public static Integer validateSessionCookie(String token) {
         try {
             PreparedStatement statement = Main.db.prepareStatement(
                     "SELECT UserID FROM Users WHERE token = ?");
@@ -274,7 +274,7 @@ public class Courses {
 
             System.out.println(error);
         }
-        return 0;
+        return null;
     }
 
     public static boolean nameExists(String name){
@@ -294,5 +294,22 @@ public class Courses {
         }
         return found;
     }
+
+    public static String prepareTags(String tags){
+        System.out.println(tags);
+        String newTags = "";
+        int length = tags.length();
+        for(int x = 0; x < (length); x++){
+            if(tags.charAt(x) == ' '){
+                newTags += ';';
+            }else{
+                newTags += tags.charAt(x);
+            }
+        }
+        newTags += ';';
+        System.out.println(newTags);
+        return newTags;
+    }
+
 
 }
