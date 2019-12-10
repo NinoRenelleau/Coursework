@@ -193,6 +193,29 @@ public class Courses {
         }
     }
 
+    @GET
+    @Path("rating/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String rating(@PathParam("id") Integer id){
+        System.out.println("courses/rating/" + id);
+        JSONObject item = new JSONObject();
+        try {
+            if (id == null) {
+                throw new Exception("Course ID is missing in the HTTP request's URL.");
+            }
+            PreparedStatement ps = Main.db.prepareStatement("SELECT AVG(Rating) From Quizzes where CourseID = ?");
+            ps.setInt(1, id);
+            ResultSet results = ps.executeQuery();
+            if (results.next()) {
+                item.put("Rating", results.getInt(1));
+            }
+            return item.toString();
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
+        }
+    }
+
 
     @POST
     @Path("update")
