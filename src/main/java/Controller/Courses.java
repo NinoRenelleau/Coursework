@@ -164,8 +164,6 @@ public class Courses {
     }
 
 
-
-
     @GET
     @Path("searchByID/{id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -185,6 +183,33 @@ public class Courses {
                 item.put("username", results.getString(2));
                 item.put("coursename", results.getString(3));
                 item.put("tags", results.getString(4));
+            }
+            return item.toString();
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
+        }
+    }
+
+    @GET
+    @Path("getTotal/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getTotal(@PathParam("id") Integer id){
+        System.out.println("courses/getTotal" + id);
+        JSONObject item = new JSONObject();
+        try {
+            if (id == null) {
+                throw new Exception("Course ID is missing in the HTTP request's URL.");
+            }
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "SELECT SUM(SELECT Points FROM Courses " +
+                            "INNER JOIN Quizzes ON Courses.CourseID = Quizzes.CourseID " +
+                            "INNER JOIN Questions Q on Quizzes.QuizID = Q.QuizID " +
+                            "WHERE Courses.CourseID = ?)");
+            ps.setInt(1, id);
+            ResultSet results = ps.executeQuery();
+            if (results.next()) {
+                item.put("Total Course Score:", results.getInt(1));
             }
             return item.toString();
         } catch (Exception exception) {
@@ -282,6 +307,8 @@ public class Courses {
             return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
     }
+
+
 
     public static Integer validateSessionCookie(String token) {
         try {

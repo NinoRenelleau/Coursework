@@ -106,6 +106,7 @@ public class History {
             return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
     }
+
     @GET
     @Path("list")
     @Produces(MediaType.APPLICATION_JSON)

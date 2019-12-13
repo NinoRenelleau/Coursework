@@ -75,7 +75,7 @@ public class Notifications {
             ps1.setInt(1, id);
             ResultSet results = ps1.executeQuery();
             int userID = results.getInt(1);
-            if (validateSessionCookie(cookie) == 0){
+            if (validateSessionCookie(cookie) == null){
                 return "{\"error\": \"user not logged in.\"}";
             } else if (validateSessionCookie(cookie) == userID){
                 System.out.println("notifications/delete id=" + id);
@@ -92,7 +92,7 @@ public class Notifications {
         }
     }
 
-    public static int validateSessionCookie(String token) {
+    public static Integer validateSessionCookie(String token) {
         try {
             PreparedStatement statement = Main.db.prepareStatement(
                     "SELECT UserID FROM Users WHERE token = ?");
@@ -106,7 +106,7 @@ public class Notifications {
 
             System.out.println(error);
         }
-        return 0;
+        return null;
     }
 
 }

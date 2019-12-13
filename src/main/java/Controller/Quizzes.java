@@ -93,6 +93,30 @@ public class Quizzes {
         }
     }
 
+    @GET
+    @Path("getTotal/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getTotal(@PathParam("id") Integer id){
+        System.out.println("quizzes/getTotal" + id);
+        JSONObject item = new JSONObject();
+        try {
+            if (id == null) {
+                throw new Exception("Course ID is missing in the HTTP request's URL.");
+            }
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "SELECT SUM(SELECT Points FROM Quizzes INNER JOIN Questions Q on Quizzes.QuizID = Q.QuizID WHERE Quizzes.QuizID = ?)");
+            ps.setInt(1, id);
+            ResultSet results = ps.executeQuery();
+            if (results.next()) {
+                item.put("Total Quiz Score:", results.getInt(1));
+            }
+            return item.toString();
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
+        }
+    }
+
     @POST
     @Path("update")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
