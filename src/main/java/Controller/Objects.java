@@ -93,7 +93,32 @@ public class Objects {
         System.out.println("objects/list");
         JSONArray list = new JSONArray();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Objects");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Object");
+            ResultSet results = ps.executeQuery();
+            while (results.next()) {
+                JSONObject item = new JSONObject();
+                item.put("Object ID", results.getInt(1));
+                item.put("Template ID", results.getInt(2));
+                item.put("Type", results.getString(3));
+                item.put("coordinates", results.getString(4));
+                list.add(item);
+            }
+            return list.toString();
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return"{\"error\": \"Unable to list items, please see server console for more info.\"}";
+        }
+    }
+
+    @GET
+    @Path("getObjects/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getObject(@PathParam("id") Integer id){
+        System.out.println("objects/getObject");
+        JSONArray list = new JSONArray();
+        try {
+            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Object WHERE QuestionTemplateID = ?");
+            ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 JSONObject item = new JSONObject();
@@ -120,7 +145,7 @@ public class Objects {
                 throw new Exception("Form data parameter is missing in the HTTP request.");
             }
             System.out.println("objects/delete id=" + id);
-            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Objectss WHERE ObjectID = ?");
+            PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Object WHERE ObjectID = ?");
             ps.setInt(1, id);
             ps.executeUpdate();
             return "{\"status\": \"OK\"}";

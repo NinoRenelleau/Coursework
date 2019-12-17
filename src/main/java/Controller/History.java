@@ -117,10 +117,10 @@ public class History {
             if (cookie == null) {
                 throw new Exception("Token is missing from the HTTP request.");
             }
-            if (validateSessionCookie(cookie) == 0){
+            if (validateSessionCookie(cookie) == null){
                 return "{\"error\": \"user not logged in.\"}";
             } else {
-                PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM History Where UserID = ?");
+                PreparedStatement ps = Main.db.prepareStatement("SELECT History.UserID, History.QuizID, History.Score, History.Review, Q.QuizName FROM History INNER JOIN Quizzes Q on History.QuizID = Q.QuizID Where History.UserID = ?");
                 ps.setInt(1, validateSessionCookie(cookie));
                 ResultSet results = ps.executeQuery();
                 while (results.next()) {
@@ -129,6 +129,7 @@ public class History {
                     item.put("Quiz ID", results.getInt(2));
                     item.put("score", results.getInt(3));
                     item.put("review", results.getInt(4));
+                    item.put("QuizName", results.getInt(5));
                     list.add(item);
                 }
                 return list.toString();
@@ -139,7 +140,7 @@ public class History {
         }
     }
 
-    public static int validateSessionCookie(String token) {
+    public static Integer validateSessionCookie(String token) {
         try {
             PreparedStatement statement = Main.db.prepareStatement(
                     "SELECT UserID FROM Users WHERE token = ?");
@@ -153,6 +154,6 @@ public class History {
 
             System.out.println(error);
         }
-        return 0;
+        return null;
     }
 }
