@@ -1,15 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Main page</title>
+    <title>Main Page</title>
     <link rel="stylesheet" type="text/css" href="/client/css/styles.css">
     <script src="/client/js/index.js"></script>
-    <link rel="shortcut icon" href="/client/favicon.ico" type="image/x-icon">
 </head>
 <body onload="pageLoad()">
+
 <div id="content">
-    <div id="testDiv"></div>
+
+    <div id="pageHeader">
+        <div class="floatRight"><button id="loginButton" ></button></div>
+        <h1 id="MainHeading">Welcome:</h1>
+    </div>
+
+    <div id="MainlistDiv">
+        <h2 id="TopHeading">Top Rated:</h2>
+        <iframe src="listCourse.html" id="topRated" height="200" width="300"></iframe>
+    </div>
+
+    <div id="RecommendedlistDiv">
+        <h2 id="RecomHeading"></h2>
+        <iframe src="listCourse.html" id="recommended" height="200" width="300"></iframe>
+    </div>
+
 </div>
+
 </body>
 </html>

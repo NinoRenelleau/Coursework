@@ -63,7 +63,7 @@ public class History {
     @Path("updateRatings")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    public String updateRatings(){
+    public String updateRatings(@FormDataParam("ID") Integer id){
         try {
             PreparedStatement ps1 = Main.db.prepareStatement("SELECT QuizID FROM Quizzes");
             ResultSet results = ps1.executeQuery();

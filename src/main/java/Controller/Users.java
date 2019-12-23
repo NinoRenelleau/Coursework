@@ -236,11 +236,12 @@ public class Users {
             return "{\"error\": \"Invalid user session token\"}";
         } else {
             try{
-                PreparedStatement ps = Main.db.prepareStatement("Select Username, Tags From Users Where UserID = ?");
+                PreparedStatement ps = Main.db.prepareStatement("Select UserID, Username, Tags From Users Where UserID = ?");
                 ps.setInt(1, validateSessionCookie(token));
                 ResultSet results = ps.executeQuery();
-                item.put("username", results.getString(1));
-                item.put("Tags", results.getString(2));
+                item.put("ID", results.getInt(1));
+                item.put("username", results.getString(2));
+                item.put("Tags", results.getString(3));
                 return item.toString();
             } catch (Exception exception) {
                 System.out.println("Database error: " + exception.getMessage());

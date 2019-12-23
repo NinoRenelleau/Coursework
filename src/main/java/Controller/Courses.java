@@ -24,15 +24,15 @@ public class Courses {
         JSONArray list = new JSONArray();
         try {
             PreparedStatement ps = Main.db.prepareStatement(
-                    "SELECT CourseID, Username, CourseName, Courses.Tags " +
-                            "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID");
+                    "SELECT CourseID, Username, CourseName, Courses.Tags, Rating FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID ORDER BY Rating DESC");
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 JSONObject item = new JSONObject();
-                item.put("course ID", results.getInt(1));
+                item.put("courseID", results.getInt(1));
                 item.put("username", results.getString(2));
                 item.put("coursename", results.getString(3));
                 item.put("tags", results.getString(4));
+                item.put("rating", results.getString(5));
                 list.add(item);
             }
             return list.toString();
@@ -114,16 +114,17 @@ public class Courses {
             if (InpCourse == null) {
                 throw new Exception("The course name is missing in the HTTP request's URL.");
             }
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags " +
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags, Rating " +
                     "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID WHERE CourseName LIKE ?");
             ps.setString(1, (InpCourse+"%"));
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 JSONObject item = new JSONObject();
-                item.put("course ID", results.getInt(1));
+                item.put("courseID", results.getInt(1));
                 item.put("username", results.getString(2));
                 item.put("coursename", results.getString(3));
                 item.put("tags", results.getString(4));
+                item.put("rating", results.getString(5));
                 list.add(item);
             }
             return list.toString();
@@ -144,16 +145,17 @@ public class Courses {
             if (InpName == null) {
                 throw new Exception("The creator's username is missing in the HTTP request's URL.");
             }
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags " +
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags, rating " +
                     "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID WHERE Users.Username = ?");
             ps.setString(1, InpName);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 JSONObject item = new JSONObject();
-                item.put("course ID", results.getInt(1));
+                item.put("courseID", results.getInt(1));
                 item.put("username", results.getString(2));
                 item.put("coursename", results.getString(3));
                 item.put("tags", results.getString(4));
+                item.put("rating", results.getString(5));
                 list.add(item);
             }
             return list.toString();
@@ -174,15 +176,16 @@ public class Courses {
             if (id == null) {
                 throw new Exception("Course ID is missing in the HTTP request's URL.");
             }
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags " +
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags, rating " +
                     "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID WHERE CourseID = ?");
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             if (results.next()) {
-                item.put("course ID", results.getInt(1));
+                item.put("courseID", results.getInt(1));
                 item.put("username", results.getString(2));
                 item.put("coursename", results.getString(3));
                 item.put("tags", results.getString(4));
+                item.put("rating", results.getString(5));
             }
             return item.toString();
         } catch (Exception exception) {
@@ -209,7 +212,7 @@ public class Courses {
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             if (results.next()) {
-                item.put("Total Course Score:", results.getInt(1));
+                item.put("TotalCourseScore", results.getInt(1));
             }
             return item.toString();
         } catch (Exception exception) {
@@ -218,8 +221,9 @@ public class Courses {
         }
     }
 
-    @GET
+    @POST
     @Path("rating/{id}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String rating(@PathParam("id") Integer id){
         System.out.println("courses/rating/" + id);
@@ -278,6 +282,30 @@ public class Courses {
         }
     }
 
+    @POST
+    @Path("updateRating")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String updateRating(@FormDataParam("courseID") Integer id){
+        try {
+            PreparedStatement ps1 = Main.db.prepareStatement("SELECT CourseID FROM Courses");
+            ResultSet results = ps1.executeQuery();
+            System.out.println("courses/updateRating");
+            while (results.next()){
+                PreparedStatement ps = Main.db.prepareStatement(
+                        "UPDATE Courses SET Rating = " +
+                                "(SELECT AVG(Rating) FROM Quizzes WHERE CourseID = ?) WHERE CourseID = ?");
+                ps.setInt(1, results.getInt(1));
+                ps.setInt(2, results.getInt(1));
+                ps.executeUpdate();
+            }
+            return "{\"status\": \"OK\"}";
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to update item, please see server console for more info.\"}";
+        }
+    }
+
     @GET
     @Path("searchByTags")
     @Produces(MediaType.APPLICATION_JSON)
@@ -289,16 +317,17 @@ public class Courses {
             if (InpTags == null) {
                 throw new Exception("The course tag is missing in the HTTP request's URL.");
             }
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags FROM Courses " +
-                    "INNER JOIN Users ON Courses.UserID = Users.UserID WHERE Courses.Tags LIKE ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags, Rating FROM Courses " +
+                    "INNER JOIN Users ON Courses.UserID = Users.UserID WHERE Courses.Tags LIKE ? ORDER BY Rating DESC");
             ps.setString(1, ("%"+InpTags+"%"));
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 JSONObject item = new JSONObject();
-                item.put("course ID", results.getInt(1));
+                item.put("courseID", results.getInt(1));
                 item.put("username", results.getString(2));
                 item.put("coursename", results.getString(3));
                 item.put("tags", results.getString(4));
+                item.put("rating", results.getString(5));
                 list.add(item);
             }
             return list.toString();
