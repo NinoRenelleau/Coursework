@@ -17,9 +17,9 @@ import java.util.UUID;
 
 public class Courses {
     @GET
-    @Path("list")
+    @Path("list/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String list(){
+    public String list(@PathParam("id") Integer id){
         System.out.println("courses/list");
         JSONArray list = new JSONArray();
         try {
@@ -27,12 +27,23 @@ public class Courses {
                     "SELECT CourseID, Username, CourseName, Courses.Tags, Rating FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID ORDER BY Rating DESC");
             ResultSet results = ps.executeQuery();
             while (results.next()) {
+                PreparedStatement ps1 = Main.db.prepareStatement("SELECT SUM(Points) From Courses INNER JOIN Quizzes ON Courses.CourseID = Quizzes.CourseID INNER JOIN Questions Q ON Quizzes.QuizID = Q.QuizID WHERE Courses.CourseID = ?");
+                ps1.setInt(1, results.getInt(1));
+                ResultSet results1 = ps1.executeQuery();
                 JSONObject item = new JSONObject();
                 item.put("courseID", results.getInt(1));
                 item.put("username", results.getString(2));
                 item.put("coursename", results.getString(3));
                 item.put("tags", results.getString(4));
                 item.put("rating", results.getString(5));
+                item.put("Total", results1.getInt(1));
+                if (id != null){
+                    PreparedStatement ps2 = Main.db.prepareStatement("SELECT SUM(Score) FROM History INNER JOIN Quizzes ON Quizzes.QuizID = History.QuizID WHERE Quizzes.CourseID = ? AND History.UserID = ?");
+                    ps2.setInt(1, results.getInt(1));
+                    ps2.setInt(2, id);
+                    ResultSet results2 = ps2.executeQuery();
+                    item.put("score", results2.getInt(1));
+                }
                 list.add(item);
             }
             return list.toString();
@@ -198,17 +209,17 @@ public class Courses {
     @Path("getTotal/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public String getTotal(@PathParam("id") Integer id){
-        System.out.println("courses/getTotal" + id);
+        System.out.println("courses/getTotal/" + id);
         JSONObject item = new JSONObject();
         try {
             if (id == null) {
                 throw new Exception("Course ID is missing in the HTTP request's URL.");
             }
             PreparedStatement ps = Main.db.prepareStatement(
-                    "SELECT SUM(SELECT Points FROM Courses " +
+                    "SELECT SUM(Points) FROM Courses " +
                             "INNER JOIN Quizzes ON Courses.CourseID = Quizzes.CourseID " +
                             "INNER JOIN Questions Q on Quizzes.QuizID = Q.QuizID " +
-                            "WHERE Courses.CourseID = ?)");
+                            "WHERE Courses.CourseID = ?");
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             if (results.next()) {

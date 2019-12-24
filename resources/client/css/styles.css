@@ -15,3 +15,110 @@ h1 {
     min-height: 600px;
     padding: 32px;
 }
+
+tr {
+    text-align: left;
+}
+
+td {
+    text-align: left;
+}
+
+th {
+    text-align: left;
+}
+
+/*td.last {
+    text-align: right;
+}
+
+th.last {
+    text-align: right;
+}*/
+
+
+#pageHeader {
+    margin-bottom: 20px;
+    border-bottom: 3px solid black;
+    background-color: lightblue;
+    padding: 10px;
+}
+
+.editButton, .deleteButton, .playButton, .searchButton, #saveButton, #cancelButton {
+    color: black;
+    border: none;
+    padding: 3px;
+    border-radius: 3px;
+    transition-duration: 0.4s;
+}
+
+.editButton {
+    background-color: silver;
+}
+
+.playButton {
+    background-color: lawngreen;
+}
+.playButton:hover{
+    background-color: limegreen;
+}
+
+.searchButton {
+    background-color: silver;
+}
+.searchButton:hover{
+    background-color: grey;
+}
+
+.editButton:hover {
+    background-color: grey;
+}
+
+#newButton {
+    background-color: cornflowerblue;
+}
+
+#newButton:hover {
+    background-color: dodgerblue;
+}
+
+.deleteButton, #cancelButton {
+    background-color: indianred;
+    margin-left: 10px;
+}
+
+.deleteButton:hover, #cancelButton:hover {
+    background-color: firebrick;
+}
+
+#saveButton {
+    background-color: lightgreen;
+}
+
+#saveButton:hover {
+    background-color: forestgreen;
+}
+
+form div {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.label {
+    width: 100px;
+    margin-bottom: 0;
+    display: inline-block;
+}
+
+.floatRight {
+    float: right;
+}
+
+#editDiv {
+    display: none;
+}
+
+table {
+    width: 100%;
+}

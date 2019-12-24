@@ -84,21 +84,26 @@ public class History {
     }
 
     @GET
-    @Path("courseScore")
+    @Path("courseScore/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String totalCourseScore(@FormDataParam("courseID") Integer courseID, @FormDataParam("UserID") Integer userID){
-        System.out.println("history/totalCourseScore");
+    public String totalCourseScore(@PathParam("id") String id){
+        System.out.println("history/totalCourseScore/"+id);
         JSONObject item = new JSONObject();
         try {
+            Integer courseID = Integer.parseInt(id.split("s")[0]);
+            Integer userID = Integer.parseInt(id.split("s")[1]);
+            System.out.println(courseID);
+            System.out.println(userID);
             if (courseID == null || userID == null) {
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
             PreparedStatement ps = Main.db.prepareStatement("SELECT SUM(Score) FROM History INNER JOIN Quizzes ON Quizzes.QuizID = History.QuizID WHERE Quizzes.CourseID = ? AND History.UserID = ?");
             ps.setInt(1, courseID);
-            ps.setInt(1, userID);
+            ps.setInt(2, userID);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 item.put("Score", results.getInt(1));
+                System.out.println(results.getInt(1));
             }
             return item.toString();
         } catch (Exception exception) {
