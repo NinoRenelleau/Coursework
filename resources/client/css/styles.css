@@ -16,6 +16,14 @@ h1 {
     padding: 32px;
 }
 
+#contentQuiz {
+    background-color: white;
+    width: 1000px;
+    margin: 0 auto;
+    min-height: 600px;
+    padding: 32px;
+}
+
 tr {
     text-align: left;
 }
@@ -28,13 +36,13 @@ th {
     text-align: left;
 }
 
-/*td.last {
+td.last {
     text-align: right;
 }
 
 th.last {
     text-align: right;
-}*/
+}
 
 
 #pageHeader {
@@ -44,7 +52,7 @@ th.last {
     padding: 10px;
 }
 
-.editButton, .deleteButton, .playButton, .searchButton, #saveButton, #cancelButton {
+.editButton, .deleteButton, .playButton, .searchButton, #saveButton, #cancelButton, #loginButton {
     color: black;
     border: none;
     padding: 3px;
@@ -59,6 +67,16 @@ th.last {
 .playButton {
     background-color: lawngreen;
 }
+
+.signUp {
+    background:none;
+    border:none;
+    color: blue;
+}
+.signUp:hover{
+    text-decoration: underline;
+}
+
 .playButton:hover{
     background-color: limegreen;
 }
@@ -121,4 +139,25 @@ form div {
 
 table {
     width: 100%;
+
+}
+
+.loginDiv {
+    font-size: 14pt;
+    margin-top: 40px;
+    margin-left: 20px;
+}
+
+#username, #password {
+    margin-left: 20px;
+    font-size: 14pt;
+}
+
+#loginButton {
+    width: 200px;
+    background-color: cornflowerblue;
+}
+
+#loginButton:hover {
+    background-color: dodgerblue;
 }

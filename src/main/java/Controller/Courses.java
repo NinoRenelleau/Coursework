@@ -23,6 +23,7 @@ public class Courses {
         System.out.println("courses/list");
         JSONArray list = new JSONArray();
         try {
+
             PreparedStatement ps = Main.db.prepareStatement(
                     "SELECT CourseID, Username, CourseName, Courses.Tags, Rating FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID ORDER BY Rating DESC");
             ResultSet results = ps.executeQuery();
@@ -181,13 +182,13 @@ public class Courses {
     @Path("searchByID/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public String searchByID(@PathParam("id") Integer id){
-        System.out.println("courses/searchByID" + id);
+        System.out.println("courses/searchByID/" + id);
         JSONObject item = new JSONObject();
         try {
             if (id == null) {
                 throw new Exception("Course ID is missing in the HTTP request's URL.");
             }
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Tags, rating " +
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Courses.Tags, Rating " +
                     "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID WHERE CourseID = ?");
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();

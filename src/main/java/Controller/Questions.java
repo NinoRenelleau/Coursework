@@ -70,20 +70,23 @@ public class Questions {
     }
 
     @GET
-    @Path("list")
+    @Path("list/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String list(@FormDataParam("QuizID") Integer id){
-        System.out.println("questions/list");
+    public String list(@PathParam("id") Integer id){
+        System.out.println("questions/list/"+id);
         JSONArray list = new JSONArray();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Questions WHERE QuizID = ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT QuestionID, Questions.QuestionTemplateID, QuestionData, Points, TemplateName, Instruction FROM Questions INNER JOIN QuestionTemplates Q ON Questions.QuestionTemplateID = Q.QuestionTemplateID WHERE QuizID = ?");
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 JSONObject item = new JSONObject();
-                item.put("Question ID", results.getInt(1));
-                item.put("QuestionTemplateID", results.getInt(2));
-                item.put("QuestionData", results.getString(3));
+                item.put("questionID", results.getInt(1));
+                item.put("templateID", results.getInt(2));
+                item.put("questionData", results.getString(3));
+                item.put("Points", results.getInt(4));
+                item.put("templateName", results.getString(5));
+                item.put("instruction", results.getString(6));
                 list.add(item);
             }
             return list.toString();
@@ -126,7 +129,7 @@ public class Questions {
             if (id == null) {
                 throw new Exception("Question ID is missing in the HTTP request's URL.");
             }
-            PreparedStatement ps = Main.db.prepareStatement("SELECT QuestionTemplateID FROM Questions WHERE QuestionID = ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT QuestionTemplateID,  FROM Questions WHERE QuestionID = ?");
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             if (results.next()) {

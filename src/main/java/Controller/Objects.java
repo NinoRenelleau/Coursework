@@ -87,18 +87,19 @@ public class Objects {
     }
 
     @GET
-    @Path("list")
+    @Path("list/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String list(){
-        System.out.println("objects/list");
+    public String list(@PathParam("id") Integer id){
+        System.out.println("objects/list/"+id);
         JSONArray list = new JSONArray();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Object");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Object WHERE QuestionTemplateID = ?");
+            ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 JSONObject item = new JSONObject();
-                item.put("Object ID", results.getInt(1));
-                item.put("Template ID", results.getInt(2));
+                item.put("objectID", results.getInt(1));
+                item.put("templateID", results.getInt(2));
                 item.put("Type", results.getString(3));
                 item.put("coordinates", results.getString(4));
                 list.add(item);

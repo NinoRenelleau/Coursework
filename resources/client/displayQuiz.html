@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Main Page</title>
+    <title>Course</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/client/css/styles.css">
-    <script src="/client/js/index.js"></script>
+    <script src="/client/js/displayQuiz.js"></script>
     <link rel="shortcut icon" href="/client/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
@@ -19,19 +19,16 @@
 </head>
 <body onload="pageLoad()">
 
-<div id="content">
+<div id="contentQuiz">
 
     <div id="pageHeader">
 
-        <div class="floatRight">
-            <div id="loggedInDetails"></div>
-        </div>
         <img style="width: 50px; height: 50px; vertical-align: middle; display: inline;" src="/client/img/logo.png" alt="logo"/>
-        <h1 style="vertical-align: middle; display: inline;" id="MainHeading">Welcome:</h1>
+        <h1 style="vertical-align: middle; display: inline;" id="MainHeading"></h1>
     </div>
 
 
-    <div id="listDiv"></div>
+    <div style="width: 1000px" id="listDiv"></div>
 
 </div>
 

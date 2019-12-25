@@ -10,8 +10,14 @@ function pageLoad() {
         '</tr>';
 
     let id;
+    let nullID = false;
     id = Cookies.get("id");
-
+    console.log(id);
+    if (id === undefined){
+        id = "1";
+        nullID = true;
+    }
+    console.log(id);
     fetch('/courses/list/'+id, {method: 'get'}).then(response => response.json()).then(courses => {
 
         for (let course of courses){
@@ -29,11 +35,14 @@ function pageLoad() {
 
             let progress = course.score;
             let total = course.Total;
+            if (nullID){
+                total = 0;
+                progress = 0;
+            }
             let percentage = 0;
             if (total != 0){
                 percentage = (progress/total)*100;
             }
-            console.log(percentage);
 
             let progressBar = '<div class="container">' +
                 '<div class="progress" style="width: 300px;">' +
@@ -44,7 +53,6 @@ function pageLoad() {
                 '    </div>' +
                 '    </div>';
 
-            console.log(progressBar);
             let courseName = course.coursename;
             if(course.coursename.length > 50){
                 courseName = courseName.slice(0, 50) + "...";
@@ -53,15 +61,17 @@ function pageLoad() {
             let Tags = (course.tags).split(";");
             let tagButtons = "";
             for(let tag of Tags){
-                tagButtons += `<button class='searchButton' data-id='${tag}'>` +
-                `${tag}</button>`;
+                if(tag != ""){
+                    tagButtons += `<button class='searchButton' data-id='${tag}'>` +
+                        `${tag}</button>`;
+                }
             }
 
             let userNameButton = `<button class='searchButton' data-id='${course.username}'>` +
                 `${course.username}</button>`;
 
             coursesHTML += `<tr>` +
-                `<td>${course.courseID}</td>` +
+                `<td style="width: 10px">${course.courseID}</td>` +
                 `<td style="width: 350px"><button class='playButton' data-id='${course.courseID}'>${courseName}</button></td>` +
                 `<td><small>${userNameButton}</small></td>` +
                 `<td>${starText}</td>` +
@@ -73,8 +83,43 @@ function pageLoad() {
         }
         coursesHTML += '</table>';
         document.getElementById("listDiv").innerHTML = coursesHTML;
-
+        checkLogin();
+        let playbuttons = document.getElementsByClassName("playButton");
+        for (let button of playbuttons){
+            button.addEventListener("click", goTo);
+        }
     });
 
+}
+
+function goTo(event) {
+    event.preventDefault();
+    const courseID = event.target.getAttribute("data-id");
+    Cookies.set("courseID", courseID);
+    window.location.href = '/client/displayQuiz.html';
+}
+
+function checkLogin() {
+    let username = Cookies.get("username");
+    console.log(username);
+    let logInHTML = "";
+    if (username === undefined){
+        let playButtons = document.getElementsByClassName("playButton");
+        for (let button of playButtons){
+            button.disabled = true;
+        }
+
+        logInHTML = "Not logged in. <a href='/client/login.html'>Log in</a>";
+
+    } else{
+        let playButtons = document.getElementsByClassName("playButton");
+        for (let button of playButtons){
+            button.disabled = false;
+        }
+
+        logInHTML = "Logged in as " + username + ".<a href='/client/login.html?logout'>Log out</a>";
+    }
+    console.log(logInHTML);
+    document.getElementById("loggedInDetails").innerHTML = logInHTML;
 }
 

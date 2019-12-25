@@ -16,28 +16,64 @@ import java.util.UUID;
 @Path("quizzes/")
 public class Quizzes {
     @GET
-    @Path("list")
+    @Path("list/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String list(@FormDataParam("courseID") Integer id){
-        System.out.println("quizzes/list");
+    public String list(@PathParam("id") String id){
+        System.out.println("quizzes/list/"+id);
         JSONArray list = new JSONArray();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseName, QuizID, QuizName, Rating FROM Quizzes " +
-                    "INNER JOIN Courses ON Courses.CourseID = Quizzes.CourseID WHERE Quizzes.CourseID = ?");
-            ps.setInt(1, id);
+            Integer courseID = Integer.parseInt(id.split("s")[0]);
+            Integer userID = Integer.parseInt(id.split("s")[1]);
+            System.out.println(Score(1, userID));
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseName, QuizID, QuizName, Quizzes.Rating FROM Quizzes " +
+                    "INNER JOIN Courses ON Courses.CourseID = Quizzes.CourseID WHERE Quizzes.CourseID = ? ");
+            ps.setInt(1, courseID);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
+
+                PreparedStatement ps1 = Main.db.prepareStatement(
+                        "SELECT SUM(Points) FROM Quizzes INNER JOIN Questions Q on Quizzes.QuizID = Q.QuizID WHERE Quizzes.QuizID = ?");
+                ps1.setInt(1, results.getInt(2));
+                ResultSet results1 = ps1.executeQuery();
                 JSONObject item = new JSONObject();
                 item.put("coursename", results.getString(1));
-                item.put("Quiz ID", results.getInt(2));
-                item.put("Quiz name", results.getString(3));
+                item.put("quizID", results.getInt(2));
+                Integer quizID = results.getInt(2);
+                item.put("quizname", results.getString(3));
                 item.put("rating", results.getString(4));
+                item.put("Total", results1.getInt(1));
+                item.put("score", Score(quizID, userID));
                 list.add(item);
+                System.out.println(list);
             }
             return list.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
             return"{\"error\": \"Unable to list items, please see server console for more info.\"}";
+        }
+    }
+
+    @GET
+    @Path("searchByID/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String searchByID(@PathParam("id") Integer id){
+        System.out.println("quizzes/searchByID/" + id);
+        JSONObject item = new JSONObject();
+        try {
+            if (id == null) {
+                throw new Exception("Course ID is missing in the HTTP request's URL.");
+            }
+            PreparedStatement ps = Main.db.prepareStatement("SELECT QuizID, QuizName FROM Quizzes WHERE QuizID = ?");
+            ps.setInt(1, id);
+            ResultSet results = ps.executeQuery();
+            if (results.next()) {
+                item.put("quizID", results.getInt(1));
+                item.put("quizname", results.getString(2));
+            }
+            return item.toString();
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
         }
     }
 
@@ -162,6 +198,29 @@ public class Quizzes {
             String error = "Database error - can't select by id from 'Users' table: " + resultsException.getMessage();
 
             System.out.println(error);
+        }
+        return null;
+    }
+
+    public static Integer Score(Integer quizID, Integer userID){
+        try{
+            PreparedStatement ps1 = Main.db.prepareStatement("SELECT EXISTS(SELECT Score FROM History INNER JOIN Quizzes Q on History.QuizID = Q.QuizID WHERE History.QuizID = ? AND UserID = ?) ");
+            ps1.setInt(1, quizID);
+            ps1.setInt(2, userID);
+            ResultSet results1 = ps1.executeQuery();
+            System.out.println(results1);
+            if(results1.getBoolean(1)){
+                PreparedStatement ps = Main.db.prepareStatement("SELECT Score FROM History INNER JOIN Quizzes Q on History.QuizID = Q.QuizID WHERE History.QuizID = ? AND UserID = ?");
+                ps.setInt(1, quizID);
+                ps.setInt(2, userID);
+                ResultSet results = ps.executeQuery();
+                System.out.println(results);
+                return results.getInt(1);
+            }
+
+        }catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return null;
         }
         return null;
     }

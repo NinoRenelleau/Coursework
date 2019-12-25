@@ -72,7 +72,7 @@ public class Users {
             ps.setString(2, password);
             ResultSet results = ps.executeQuery();
             item.put("username", username);
-            item.put("username", password);
+            item.put("password", password);
             item.put("userID", results.getInt(1));
             item.put("userType", results.getString(2));
             item.put("Tags", results.getString(3));
@@ -209,7 +209,9 @@ public class Users {
 
     @POST
     @Path("logout")
-    public void logout(@CookieParam("token") String token) {
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String logout(@CookieParam("token") String token) {
 
         System.out.println("/Users/logout - Logging out user");
 
@@ -217,9 +219,10 @@ public class Users {
             PreparedStatement statement = Main.db.prepareStatement("Update Users SET token = NULL WHERE token = ?");
             statement.setString(1, token);
             statement.executeUpdate();
-        } catch (Exception resultsException) {
-            String error = "Database error - can't update 'Users' table: " + resultsException.getMessage();
-            System.out.println(error);
+            return "{\"status\": \"OK\"}";
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to create new item, please see server console for more info.\"}";
         }
 
     }
