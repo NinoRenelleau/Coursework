@@ -10,6 +10,13 @@ let questionData;
 let questNum = 0;
 let points = 0;
 let currentPoint;
+let Questions = [];
+let buttons = [];
+let headers = [];
+let endQuiz = false;
+let totalPoints = 0;
+let endQuestion = true;
+let stars = [];
 
 function fixSize(){
     w = window.innerWidth;
@@ -20,6 +27,7 @@ function fixSize(){
 }
 
 function pageLoad(){
+    totalPoints = 0;
     quizID = Cookies.get("quizID");
 
     window.addEventListener("resize", fixSize);
@@ -37,76 +45,293 @@ function pageLoad(){
     }, false);
 
     window.requestAnimationFrame(gameFrame);
-
 }
 
 function gameFrame(timestamp) {
-
     if (lastTimestamp === 0) lastTimestamp = timestamp;
     const frameLength = (timestamp - lastTimestamp) / 1000;
     lastTimestamp = timestamp;
+    console.log(totalPoints);
+    if(endQuestion){
+        initialise();
+    }
+    if(endQuiz){
+        endScreen();
+        ratingProcess();
 
-    initialise();
-    //inputs();
-    //processes(frameLength);
-    //outputs();
-
+    } else{
+        inputs();
+        processes();
+        //outputs();
+    }
     window.requestAnimationFrame(gameFrame);
+}
 
+function inputs(){
+    const canvas = document.getElementById('question');
+    const context = canvas.getContext('2d');
+
+    for (let button of buttons){
+        if(isInside(button)){
+            button.on = true;
+        } else{
+            button.on = false;
+        }
+    }
+}
+
+function processes(){
+    const canvas = document.getElementById('question');
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "blue";
+    context.font = "20px Arial";
+    context.fillText(points, 50, 68);
+    for (let button of buttons){
+        if(button.on){
+            console.log(button.correct);
+            context.fillStyle = "black";
+            context.font = "30px Arial";
+            context.fillText(button.content, button.x, button.y);
+            context.globalCompositeOperation = "destination-over";
+            context.strokeStyle = "black";
+            context.strokeRect(button.X, button.Y, button.width, button.height);
+            context.globalCompositeOperation = "destination-over";
+            context.fillStyle = "green";
+            context.fillRect(button.X, button.Y, button.width, button.height);
+            if(mouseClicked && button.correct){
+                points += Number(Cookies.get("currentPoint"));
+                clearAll();
+                mouseClicked = false;
+                endQuestion = true;
+            } else if (mouseClicked && !button.correct){
+                clearAll();
+                mouseClicked = false;
+                endQuestion = true;
+            }
+        } else{
+            context.fillStyle = "black";
+            context.font = "30px Arial";
+            context.fillText(button.content, button.x, button.y);
+            context.globalCompositeOperation = "destination-over";
+            context.strokeStyle = "black";
+            context.strokeRect(button.X, button.Y, button.width, button.height);
+            context.globalCompositeOperation = "destination-over";
+        }
+    }
+    for (let header of headers){
+        context.fillStyle = "black";
+        context.font = "50px Arial";
+        context.fillText(header.content, header.x, header.y);
+        context.strokeStyle = "black";
+        context.beginPath();
+        context.moveTo(header.boxX, header.boxY);
+        context.lineTo(header.width + header.x, header.boxY);
+        context.stroke();
+    }
+    mouseClicked = false;
 }
 
 function initialise(){
+    console.log(questNum);
+    endQuestion = false;
     const canvas = document.getElementById('question');
     const context = canvas.getContext('2d');
     fetch('/questions/list/'+quizID, {method: 'get'}
     ).then(response => response.json()
     ).then(questions => {
-        Cookies.set('questionID', questions[questNum].questionID);
-        Cookies.set('templateID', questions[questNum].templateID);
-        Cookies.set('instruction', questions[questNum].instruction);
-        Cookies.set('questionData', questions[questNum].questionData);
-        Cookies.set('currentPoint', questions[questNum].Points);
+        for(let question of questions){
+            Questions.push(question);
+        }
+        console.log(questions);
+        if (questions[questNum] === undefined){
+            endQuiz = true;
+            console.log(endQuiz);
+        } else{
+            Cookies.set('questionID', questions[questNum].questionID);
+            Cookies.set('templateID', questions[questNum].templateID);
+            Cookies.set('instruction', questions[questNum].instruction);
+            Cookies.set('questionData', questions[questNum].questionData);
+            Cookies.set('currentPoint', questions[questNum].Points);
+            console.log(questions[questNum]);
+            totalPoints += Number(Cookies.get("currentPoint"));
+        }
+        questNum += 1;
 
-    });
-    /*console.log(questionID);
-    console.log(templateID);
-    console.log(instruction);
-    console.log(questionData);
-    console.log(currentPoint);*/
-    templateID = Cookies.get('templateID');
-    console.log(templateID);
-    fetch('/objects/list/'+templateID, {method: 'get'}
-    ).then(response => response.json()
-    ).then(objects => {
-        console.log(objects);
-        for (let object of objects){
-            let coordinates = object.coordinates.split("s");
-            let x = coordinates[0];
-            let y = coordinates[1];
-            if(object.Type == "button"){
-                let buttonContent = Cookies.get("questionData").split(":::");
-                console.log(buttonContent);
-                context.strokeStyle = "black";
-                context.strokeRect(x, y, 100, 50);
-                for(let contents of buttonContent){
-                    if(contents[0] == (object.objectID).toString()){
-                        context.fillStyle = "black";
-                        context.font = "30px Arial";
-                        let buttonWriting = contents.substring(1, (contents.length-1));
-                        console.log(buttonWriting);
-                        context.fillText(buttonWriting, (x+5), (y-35));
+        if (!endQuiz) {
+            templateID = Cookies.get('templateID');
+            console.log(templateID);
+            fetch('/objects/list/' + templateID, {method: 'get'}
+            ).then(response => response.json()
+            ).then(objects => {
+                console.log(objects);
+                for (let object of objects) {
+                    let coordinates = object.coordinates.split("s");
+                    let x = coordinates[0];
+                    let y = coordinates[1];
+                    if (object.Type == "button") {
+                        let buttonContent = Cookies.get("questionData").split(":::");
+                        let buttonWriting;
+                        let correct = false;
+                        for (let contents of buttonContent) {
+                            if (contents[0] == (object.objectID).toString()) {
+                                context.fillStyle = "black";
+                                context.font = "30px Arial";
+                                buttonWriting = contents.substring(1, (contents.length - 1));
+                                if (contents.substring(contents.length - 1) == "r") {
+                                    correct = true;
+                                }
+                            }
+                        }
+                        let widthOfWriting = context.measureText(buttonWriting).width;
+                        context.strokeStyle = "black";
+                        let boxX = Number(x) - 5;
+                        let boxY = Number(y) - 30;
+                        buttons.push({
+                            X: boxX,
+                            Y: boxY,
+                            x: Number(x),
+                            y: Number(y),
+                            width: widthOfWriting + 10,
+                            height: 40,
+                            on: false,
+                            content: buttonWriting,
+                            correct: correct
+                        });
+                    } else if (object.Type == "header") {
+                        let headerContent = Cookies.get("questionData").split(":::");
+                        let headerWriting;
+                        for (let contents of headerContent) {
+                            if (contents[0] == (object.objectID).toString()) {
+                                context.fillStyle = "black";
+                                context.font = "50px Arial";
+                                headerWriting = contents.substring(1, (contents.length - 1));
+                                console.log(headerWriting);
+                            }
+                        }
+                        let widthOfWriting = context.measureText(headerWriting).width;
+                        context.strokeStyle = "black";
+                        let boxX = Number(x) - 5;
+                        let boxY = Number(y) + 5;
+                        headers.push({
+                            boxX: boxX,
+                            boxY: boxY,
+                            x: Number(x),
+                            y: Number(y),
+                            content: headerWriting,
+                            width: widthOfWriting
+                        });
                     }
+
                 }
-
-            } else if (object.Type == "header"){
-                context.fillStyle = "red";
-                context.fillRect(x, y, 100, 20);
-            }
-
+            });
         }
     });
+
 }
 
 function isInside(rect){
-    return mousePosition.x > rect.x && mousePosition.x < rect.x+rect.width && mousePosition.y < rect.y+rect.height && mousePosition.y > rect.y
+    return mousePosition.x > rect.X && mousePosition.x < rect.X+rect.width && mousePosition.y < rect.Y+rect.height && mousePosition.y > rect.Y
+}
+
+function isInsideStar(star){
+    let pointProd = (mousePosition.x*star.x)+(mousePosition.y * star.y);
+    let mouseMod = Math.sqrt(((mousePosition.x)^2) + ((mousePosition.y)^2));
+    let starMod = Math.sqrt(((star.x)^2) + ((star.y)^2));
+    let distance = (pointProd)/(mouseMod*starMod);
+    return distance <= Math.cos(15);
+}
+
+function endScreen(){
+    console.log("this is the end");
+    for (let x = 0; x < 5; x++){
+        stars.push({num:x, selected:false, x:(w/6)*(x+1)});
+    }
+}
+
+function ratingProcess(){
+    const canvas = document.getElementById('question');
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    console.log(points);
+    console.log(totalPoints);
+    let percentage = Math.floor((points/totalPoints)*100);
+    context.fillStyle = "white";
+    context.font = "30px Arial";
+    context.fillText((percentage+"%"), (w/2)-295, (h/2)+10);
+    context.globalCompositeOperation = "destination-over";
+    context.strokeStyle = "black";
+    context.strokeRect((w/2)-300, (h/2)-20, 600, 40);
+    context.globalCompositeOperation = "destination-over";
+    context.fillStyle = "blue";
+    context.fillRect((w/2)-300, (h/2)-20, percentage*6, 40);
+    let rating = 0;
+    for (let star of stars){
+        if(isInsideStar(star)){
+            star.selected = true;
+            console.log("inside");
+        }
+        if(star.selected){
+            rating = star.num + 1;
+        }
+    }
+    for (let star of stars){
+        if(rating >= star.num + 1){
+            drawStar(Number(star.x), (2*h)/3, 5, 30, 15, "yellow");
+        } else{
+            drawStar(Number(star.x), (2*h)/3, 5, 30, 15, "black");
+        }
+    }
+}
+
+function clearAll(){
+    const canvas = document.getElementById('question');
+    const context = canvas.getContext('2d');
+    /*for(let button in buttons){
+        console.log(buttons[button]);
+        delete buttons[button];
+        buttons.pop()
+    }
+    console.log(buttons);
+    for(let header in headers) {
+        delete headers[header];
+        headers.pop();
+    }*/
+    headers = [];
+    buttons = [];
+    context.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawStar(cx, cy, spikes, outerRadius, innerRadius, colour) {
+    const canvas = document.getElementById('question');
+    const context = canvas.getContext('2d');
+    console.log("star");
+
+    let rot = Math.PI / 2 * 3;
+    let x = cx;
+    let y = cy;
+    let step = Math.PI / spikes;
+
+    context.strokeSyle = "#000";
+    context.beginPath();
+    context.moveTo(cx, cy - outerRadius)
+    for (let i = 0; i < spikes ; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        context.lineTo(x, y)
+        rot += step
+
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        context.lineTo(x, y)
+        rot += step
+    }
+    context.lineTo(cx, cy - outerRadius)
+    context.closePath();
+    context.lineWidth=5;
+    context.strokeStyle='grey';
+    context.stroke();
+    context.fillStyle=colour;
+    context.fill();
+    console.log("x:"+cx + "y:"+cy);
 }

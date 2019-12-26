@@ -41,7 +41,7 @@ function pageLoad() {
             }
             let percentage = 0;
             if (total != 0){
-                percentage = (progress/total)*100;
+                percentage = Math.floor((progress/total)*100);
             }
 
             let progressBar = '<div class="container">' +
