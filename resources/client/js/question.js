@@ -17,6 +17,9 @@ let endQuiz = false;
 let totalPoints = 0;
 let endQuestion = true;
 let stars = [];
+let rating = 0;
+let selected = false;
+let waitTime = 0;
 
 function fixSize(){
     w = window.innerWidth;
@@ -51,12 +54,14 @@ function gameFrame(timestamp) {
     if (lastTimestamp === 0) lastTimestamp = timestamp;
     const frameLength = (timestamp - lastTimestamp) / 1000;
     lastTimestamp = timestamp;
-    console.log(totalPoints);
+    //console.log(totalPoints);
     if(endQuestion){
         initialise();
     }
     if(endQuiz){
-        endScreen();
+        if(stars.length == 0){
+            endScreen();
+        }
         ratingProcess();
 
     } else{
@@ -143,7 +148,7 @@ function initialise(){
         for(let question of questions){
             Questions.push(question);
         }
-        console.log(questions);
+        //console.log(questions);
         if (questions[questNum] === undefined){
             endQuiz = true;
             console.log(endQuiz);
@@ -153,14 +158,14 @@ function initialise(){
             Cookies.set('instruction', questions[questNum].instruction);
             Cookies.set('questionData', questions[questNum].questionData);
             Cookies.set('currentPoint', questions[questNum].Points);
-            console.log(questions[questNum]);
+            //console.log(questions[questNum]);
             totalPoints += Number(Cookies.get("currentPoint"));
         }
         questNum += 1;
 
         if (!endQuiz) {
             templateID = Cookies.get('templateID');
-            console.log(templateID);
+            //console.log(templateID);
             fetch('/objects/list/' + templateID, {method: 'get'}
             ).then(response => response.json()
             ).then(objects => {
@@ -206,7 +211,7 @@ function initialise(){
                                 context.fillStyle = "black";
                                 context.font = "50px Arial";
                                 headerWriting = contents.substring(1, (contents.length - 1));
-                                console.log(headerWriting);
+                                //console.log(headerWriting);
                             }
                         }
                         let widthOfWriting = context.measureText(headerWriting).width;
@@ -235,15 +240,13 @@ function isInside(rect){
 }
 
 function isInsideStar(star){
-    let pointProd = (mousePosition.x*star.x)+(mousePosition.y * star.y);
-    let mouseMod = Math.sqrt(((mousePosition.x)^2) + ((mousePosition.y)^2));
-    let starMod = Math.sqrt(((star.x)^2) + ((star.y)^2));
-    let distance = (pointProd)/(mouseMod*starMod);
-    return distance <= Math.cos(15);
+    let y = (2*h)/3;
+    let distance = Math.floor(Math.sqrt(((Number(mousePosition.x) - Number(star.x))*(Number(mousePosition.x) - Number(star.x))) + ((Number(mousePosition.y) - Number(y))*(Number(mousePosition.y) - Number(y)))));
+    return distance <= 20;
 }
 
 function endScreen(){
-    console.log("this is the end");
+    //console.log("this is the end");
     for (let x = 0; x < 5; x++){
         stars.push({num:x, selected:false, x:(w/6)*(x+1)});
     }
@@ -253,8 +256,6 @@ function ratingProcess(){
     const canvas = document.getElementById('question');
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
-    console.log(points);
-    console.log(totalPoints);
     let percentage = Math.floor((points/totalPoints)*100);
     context.fillStyle = "white";
     context.font = "30px Arial";
@@ -265,23 +266,70 @@ function ratingProcess(){
     context.globalCompositeOperation = "destination-over";
     context.fillStyle = "blue";
     context.fillRect((w/2)-300, (h/2)-20, percentage*6, 40);
-    let rating = 0;
+
     for (let star of stars){
         if(isInsideStar(star)){
             star.selected = true;
-            console.log("inside");
+            selected = true;
+        } else{
+            star.selected = false;
         }
+
         if(star.selected){
             rating = star.num + 1;
         }
     }
-    for (let star of stars){
-        if(rating >= star.num + 1){
-            drawStar(Number(star.x), (2*h)/3, 5, 30, 15, "yellow");
-        } else{
-            drawStar(Number(star.x), (2*h)/3, 5, 30, 15, "black");
+    console.log(rating);
+    if (!(mouseClicked && selected)) {
+        for (let star of stars) {
+            if (rating - 1 >= star.num) {
+                drawStar(Number(star.x), (2 * h) / 3, 5, 30, 15, "yellow");
+            } else {
+                drawStar(Number(star.x), (2 * h) / 3, 5, 30, 15, "black");
+            }
+        }
+        mouseClicked = false;
+        rating = 0;
+    } else{
+        context.fillStyle = "black";
+        context.font = "30px Arial";
+        context.fillText("Quiz Completed, Saving...", (w/6), ((2 * h) / 3)-30);
+        let formData = new FormData();
+        formData.append("QuizID", Cookies.get("quizID"));
+        formData.append("Score", points);
+        formData.append("Review", rating);
+        waitTime += 1;
+        if (waitTime >= 150){
+            let formData2 = new FormData();
+            formData2.append("ID", 0);
+            fetch('/history/update', {method: 'post', body: formData}
+            ).then(response => response.json()
+            ).then(responseData =>{
+                if (responseData.hasOwnProperty('error')) {
+                    alert(responseData.error);
+                }
+                fetch('/history/updateRatings', {method: 'post', body: formData2}
+                ).then(response => response.json()
+                ).then(dataResponse => {
+                    if (dataResponse.hasOwnProperty('error')) {
+                        alert(dataResponse.error);
+                    }
+                    fetch('/history/updateCourseRatings', {method: 'post', body: formData2}
+                    ).then(response => response.json()
+                    ).then(Response => {
+                        if (Response.hasOwnProperty('error')) {
+                            alert(Response.error);
+                        }
+
+                    });
+                });
+                parent.window.location.href = '/client/index.html';
+
+            });
+
         }
     }
+
 }
 
 function clearAll(){
@@ -305,7 +353,6 @@ function clearAll(){
 function drawStar(cx, cy, spikes, outerRadius, innerRadius, colour) {
     const canvas = document.getElementById('question');
     const context = canvas.getContext('2d');
-    console.log("star");
 
     let rot = Math.PI / 2 * 3;
     let x = cx;
@@ -333,5 +380,4 @@ function drawStar(cx, cy, spikes, outerRadius, innerRadius, colour) {
     context.stroke();
     context.fillStyle=colour;
     context.fill();
-    console.log("x:"+cx + "y:"+cy);
 }

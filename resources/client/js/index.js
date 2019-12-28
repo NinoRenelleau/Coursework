@@ -17,6 +17,8 @@ function pageLoad() {
         id = "1";
         nullID = true;
     }
+
+    document.getElementById("create").addEventListener("click", goToCreate);
     console.log(id);
     fetch('/courses/list/'+id, {method: 'get'}).then(response => response.json()).then(courses => {
 
@@ -97,6 +99,11 @@ function goTo(event) {
     const courseID = event.target.getAttribute("data-id");
     Cookies.set("courseID", courseID);
     window.location.href = '/client/displayQuiz.html';
+}
+
+function goToCreate(event){
+    event.preventDefault();
+    window.location.href = '/client/createCourse.html';
 }
 
 function checkLogin() {

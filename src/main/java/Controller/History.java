@@ -35,7 +35,7 @@ public class History {
             ResultSet results = ps1.executeQuery();
             if (results.getBoolean(1) == false){
                 System.out.println("history/create");
-                PreparedStatement ps = Main.db.prepareStatement("INSERT INTO History (userID, QuizID, Score, Review) VALUES (?, ?, ?, ?)");
+                PreparedStatement ps = Main.db.prepareStatement("INSERT INTO History (UserID, QuizID, Score, Review) VALUES (?, ?, ?, ?)");
                 ps.setInt(1, validateSessionCookie(cookie));
                 ps.setInt(2, quizID);
                 ps.setInt(3, score);
@@ -44,7 +44,7 @@ public class History {
                 return "{\"status\": \"OK\"}";
             } else{
                 System.out.println("history/update");
-                PreparedStatement ps = Main.db.prepareStatement("UPDATE History SET Score = ?, Review = ? WHERE UserID = ?, QuizID = ?");
+                PreparedStatement ps = Main.db.prepareStatement("UPDATE History SET Score = ?, Review = ? WHERE UserID = ? AND QuizID = ?");
                 ps.setInt(3, validateSessionCookie(cookie));
                 ps.setInt(4, quizID);
                 ps.setInt(1, score);
@@ -72,6 +72,30 @@ public class History {
                 PreparedStatement ps = Main.db.prepareStatement(
                         "UPDATE Quizzes SET Rating = " +
                                 "(SELECT AVG(Review) FROM History WHERE QuizID = ?) WHERE QuizID = ?");
+                ps.setInt(1, results.getInt(1));
+                ps.setInt(2, results.getInt(1));
+                ps.executeUpdate();
+            }
+            return "{\"status\": \"OK\"}";
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to update item, please see server console for more info.\"}";
+        }
+    }
+
+    @POST
+    @Path("updateCourseRatings")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String updateCourseRatings(@FormDataParam("ID") Integer id){
+        try {
+            PreparedStatement ps1 = Main.db.prepareStatement("SELECT CourseID FROM Courses");
+            ResultSet results = ps1.executeQuery();
+            while (results.next()){
+                System.out.println("history/updateCourseRating");
+                PreparedStatement ps = Main.db.prepareStatement(
+                        "UPDATE Courses SET Rating = " +
+                                "(SELECT AVG(Quizzes.Rating) FROM Quizzes WHERE Quizzes.CourseID = ?) WHERE CourseID = ?");
                 ps.setInt(1, results.getInt(1));
                 ps.setInt(2, results.getInt(1));
                 ps.executeUpdate();

@@ -6,5 +6,4 @@ function pageLoad() {
         console.log(quiz);
         document.getElementById("MainHeading").innerText = quiz.quizname;
     });
-
 }
