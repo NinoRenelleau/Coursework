@@ -102,6 +102,7 @@ public class Objects {
                 item.put("templateID", results.getInt(2));
                 item.put("Type", results.getString(3));
                 item.put("coordinates", results.getString(4));
+                item.put("font", results.getInt(5));
                 list.add(item);
             }
             return list.toString();

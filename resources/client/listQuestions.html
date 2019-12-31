@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Course</title>
+    <title>Quiz</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/client/css/styles.css">
-    <script src="/client/js/displayQuiz.js"></script>
+    <script src="/client/js/listQuestions.js"></script>
     <link rel="shortcut icon" href="/client/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
@@ -25,10 +25,8 @@
 
         <img style="width: 50px; height: 50px; vertical-align: middle; display: inline;" src="/client/img/logo.png" alt="logo"/>
         <h1 style="vertical-align: middle; display: inline;" id="MainHeading"></h1>
-        <div style="float: right;" id="creatorButton">
-        </div>
+        <div style="float: right;"><button onclick="goToQuestion()" id="addQuestion">Add Question</button></div>
     </div>
-
 
     <div style="width: 1000px" id="listDiv"></div>
 

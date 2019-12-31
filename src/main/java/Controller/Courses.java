@@ -74,7 +74,7 @@ public class Courses {
                 PreparedStatement ps = Main.db.prepareStatement(
                         "INSERT INTO Courses (CourseName, Tags, UserID) VALUES (?, ?, ?)");
                 ps.setString(1, coursename);
-                ps.setString(2, prepareTags(tags));
+                ps.setString(2, tags);
                 ps.setInt(3, id);
                 ps.execute();
                 return "{\"status\": \"OK\"}";
@@ -188,7 +188,7 @@ public class Courses {
             if (id == null) {
                 throw new Exception("Course ID is missing in the HTTP request's URL.");
             }
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Courses.Tags, Rating " +
+            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseID, Username, CourseName, Courses.Tags, Rating, Courses.UserID " +
                     "FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID WHERE CourseID = ?");
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
@@ -198,6 +198,7 @@ public class Courses {
                 item.put("coursename", results.getString(3));
                 item.put("tags", results.getString(4));
                 item.put("rating", results.getString(5));
+                item.put("id", results.getInt(6));
             }
             return item.toString();
         } catch (Exception exception) {

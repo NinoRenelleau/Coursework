@@ -48,6 +48,7 @@ function pageLoad(){
     }, false);
 
     window.requestAnimationFrame(gameFrame);
+
 }
 
 function gameFrame(timestamp) {
@@ -91,12 +92,12 @@ function processes(){
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = "blue";
     context.font = "20px Arial";
-    context.fillText(points, 50, 68);
+    context.fillText("Score: " + points, 50, 68);
     for (let button of buttons){
         if(button.on){
             console.log(button.correct);
             context.fillStyle = "black";
-            context.font = "30px Arial";
+            context.font = button.font+"px Arial";
             context.fillText(button.content, button.x, button.y);
             context.globalCompositeOperation = "destination-over";
             context.strokeStyle = "black";
@@ -105,7 +106,7 @@ function processes(){
             context.fillStyle = "green";
             context.fillRect(button.X, button.Y, button.width, button.height);
             if(mouseClicked && button.correct){
-                points += Number(Cookies.get("currentPoint"));
+                points += Number(currentPoint);
                 clearAll();
                 mouseClicked = false;
                 endQuestion = true;
@@ -116,7 +117,7 @@ function processes(){
             }
         } else{
             context.fillStyle = "black";
-            context.font = "30px Arial";
+            context.font = button.font+"px Arial";
             context.fillText(button.content, button.x, button.y);
             context.globalCompositeOperation = "destination-over";
             context.strokeStyle = "black";
@@ -126,7 +127,7 @@ function processes(){
     }
     for (let header of headers){
         context.fillStyle = "black";
-        context.font = "50px Arial";
+        context.font = header.font+"px Arial";
         context.fillText(header.content, header.x, header.y);
         context.strokeStyle = "black";
         context.beginPath();
@@ -153,18 +154,17 @@ function initialise(){
             endQuiz = true;
             console.log(endQuiz);
         } else{
-            Cookies.set('questionID', questions[questNum].questionID);
-            Cookies.set('templateID', questions[questNum].templateID);
-            Cookies.set('instruction', questions[questNum].instruction);
-            Cookies.set('questionData', questions[questNum].questionData);
-            Cookies.set('currentPoint', questions[questNum].Points);
+            questionID = questions[questNum].questionID;
+            templateID= questions[questNum].templateID;
+            instruction = questions[questNum].instruction;
+            questionData = questions[questNum].questionData;
+            currentPoint = questions[questNum].Points;
             //console.log(questions[questNum]);
-            totalPoints += Number(Cookies.get("currentPoint"));
+            totalPoints += Number(currentPoint);
         }
         questNum += 1;
 
         if (!endQuiz) {
-            templateID = Cookies.get('templateID');
             //console.log(templateID);
             fetch('/objects/list/' + templateID, {method: 'get'}
             ).then(response => response.json()
@@ -174,18 +174,16 @@ function initialise(){
                     let coordinates = object.coordinates.split("s");
                     let x = coordinates[0];
                     let y = coordinates[1];
-                    if (object.Type == "button") {
-                        let buttonContent = Cookies.get("questionData").split(":::");
+                    if (object.Type == "correctButton" || object.Type == "wrongButton") {
+                        let buttonContent = questionData.split(":::");
                         let buttonWriting;
                         let correct = false;
+                        if(object.Type == "correctButton") correct = true;
                         for (let contents of buttonContent) {
                             if (contents[0] == (object.objectID).toString()) {
                                 context.fillStyle = "black";
-                                context.font = "30px Arial";
-                                buttonWriting = contents.substring(1, (contents.length - 1));
-                                if (contents.substring(contents.length - 1) == "r") {
-                                    correct = true;
-                                }
+                                context.font = object.font+"px Arial";
+                                buttonWriting = contents.substring(1, (contents.length));
                             }
                         }
                         let widthOfWriting = context.measureText(buttonWriting).width;
@@ -198,18 +196,19 @@ function initialise(){
                             x: Number(x),
                             y: Number(y),
                             width: widthOfWriting + 10,
-                            height: 40,
+                            font: object.font,
+                            height: Number(object.font)+10,
                             on: false,
                             content: buttonWriting,
                             correct: correct
                         });
                     } else if (object.Type == "header") {
-                        let headerContent = Cookies.get("questionData").split(":::");
+                        let headerContent = questionData.split(":::");
                         let headerWriting;
                         for (let contents of headerContent) {
                             if (contents[0] == (object.objectID).toString()) {
                                 context.fillStyle = "black";
-                                context.font = "50px Arial";
+                                context.font = object.font+"px Arial";
                                 headerWriting = contents.substring(1, (contents.length - 1));
                                 //console.log(headerWriting);
                             }
@@ -223,6 +222,7 @@ function initialise(){
                             boxY: boxY,
                             x: Number(x),
                             y: Number(y),
+                            font: object.font,
                             content: headerWriting,
                             width: widthOfWriting
                         });
@@ -299,7 +299,7 @@ function ratingProcess(){
         formData.append("Score", points);
         formData.append("Review", rating);
         waitTime += 1;
-        if (waitTime >= 150){
+        if (waitTime >= 50){
             let formData2 = new FormData();
             formData2.append("ID", 0);
             fetch('/history/update', {method: 'post', body: formData}

@@ -84,15 +84,29 @@ public class Quizzes {
     public String create(
             @FormDataParam("name") String name, @FormDataParam("courseID") Integer id){
         try {
+            JSONObject item = new JSONObject();
             if (id == null || name == null){
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
             System.out.println("quizzes/create");
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Quizzes (QuizName, CourseID) VALUES (?, ?)");
-            ps.setString(1, name);
-            ps.setInt(2, id);
-            ps.execute();
-            return "{\"status\": \"OK\"}";
+            PreparedStatement ps2 = Main.db.prepareStatement("SELECT EXISTS(SELECT * FROM Quizzes WHERE QuizName = ? AND CourseID = ?)");
+            ps2.setString(1, name);
+            ps2.setInt(2, id);
+            ResultSet results2 = ps2.executeQuery();
+            if (!results2.getBoolean(1)){
+                PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Quizzes (QuizName, CourseID) VALUES (?, ?)");
+                ps.setString(1, name);
+                ps.setInt(2, id);
+                ps.execute();
+                PreparedStatement ps1 = Main.db.prepareStatement("SELECT QuizID FROM Quizzes WHERE QuizName = ? AND CourseID = ?");
+                ps1.setString(1, name);
+                ps1.setInt(2, id);
+                ResultSet results = ps1.executeQuery();
+                item.put("quizID", results.getInt(1));
+                return item.toString();
+            } else{
+                return "{\"error\": \"Name given to quiz already exists in this course.\"}";
+            }
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
             return "{\"error\": \"Unable to create new item, please see server console for more info.\"}";

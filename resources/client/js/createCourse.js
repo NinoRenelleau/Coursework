@@ -1,6 +1,29 @@
 let newTag;
 
 function pageLoad(){
+    document.getElementById("CreateButton").addEventListener("click", create)
+}
+
+function create(event){
+    const userID = Cookies.get("id");
+    event.preventDefault();
+    let formData = new FormData();
+    if(document.getElementById("coursename").value != ""){
+        formData.append("userId", userID);
+        formData.append("coursename", document.getElementById("coursename").value);
+        formData.append("tags", document.getElementById("tagAssembled").innerText);
+        fetch("/courses/create", {method: 'post', body: formData}
+        ).then(response => response.json()
+        ).then(responseData => {
+            if (responseData.hasOwnProperty('error')){
+                alert(responseData.error);
+            } else{
+                window.location.href = '/client/index.html';
+            }
+        });
+    } else{
+        alert("Must enter a course name");
+    }
 
 }
 
@@ -26,6 +49,7 @@ function addTag(){
     if(!(newTag === undefined)){
         document.getElementById("tagAssembled").innerText += newTag + ";";
     }
+    newTag = "";
 }
 
 function removeTag(){

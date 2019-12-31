@@ -1,0 +1,18 @@
+#wrapper{
+    position:relative;
+}
+
+.canvas{
+    position: absolute;
+    top:0px;
+    left:0px;
+
+}
+
+#question {
+    z-index: 2;
+}
+
+#inputBox{
+    z-index: 1;
+}
