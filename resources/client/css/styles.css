@@ -46,6 +46,14 @@ th.last {
     text-align: right;
 }
 
+.tag{
+    color: blue;
+}
+
+.tag:hover{
+    text-decoration: underline;
+    color: blue;
+}
 
 #pageHeader {
     margin-bottom: 20px;

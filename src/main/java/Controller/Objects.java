@@ -17,67 +17,48 @@ import java.util.UUID;
 
 public class Objects {
 
-    @GET
-    @Path("getCoordinates/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String getCoordinates(@PathParam("id") Integer id){
-        System.out.println("Objects/getCoordinates" + id);
-        JSONObject item = new JSONObject();
-        try {
-            if (id == null) {
-                throw new Exception("Object ID is missing in the HTTP request's URL.");
-            }
-            PreparedStatement ps = Main.db.prepareStatement("SELECT Coordinates FROM Object WHERE ObjectID == ?");
-            ps.setInt(1, id);
-            ResultSet results = ps.executeQuery();
-            if (results.next()) {
-                item.put("Cooridnates", results.getString(1));
-            }
-            return item.toString();
-        } catch (Exception exception) {
-            System.out.println("Database error: " + exception.getMessage());
-            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
-        }
-    }
-
-    @GET
-    @Path("getTypes/{id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String getTypes(@PathParam("id") Integer id){
-        System.out.println("Objects/getCoordinates" + id);
-        JSONObject item = new JSONObject();
-        try {
-            if (id == null) {
-                throw new Exception("Object ID is missing in the HTTP request's URL.");
-            }
-            PreparedStatement ps = Main.db.prepareStatement("SELECT ObjectType FROM Object WHERE ObjectID == ?");
-            ps.setInt(1, id);
-            ResultSet results = ps.executeQuery();
-            if (results.next()) {
-                item.put("Type", results.getString(1));
-            }
-            return item.toString();
-        } catch (Exception exception) {
-            System.out.println("Database error: " + exception.getMessage());
-            return "{\"error\": \"Unable to get item, please see server console for more info.\"}";
-        }
-    }
-
     @POST
     @Path("create")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(
-            @FormDataParam("TemplateId") Integer id, @FormDataParam("type") String type, @FormDataParam("coordinates") String coordinates){
+            @FormDataParam("QuestionId") Integer id, @FormDataParam("type") String type, @FormDataParam("coordinates") String coordinates, @FormDataParam("font") Integer font, @FormDataParam("content") String content){
         try {
             if (id == null || type == null || coordinates == null){
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
             System.out.println("objects/create");
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Object (QuestionTemplateID, ObjectType, Coordinates) VALUES (?, ?, ?)");
+            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Object (QuestionID, ObjectType, Coordinates, Font, Content) VALUES (?, ?, ?, ?, ?)");
             ps.setInt(1, id);
             ps.setString(2, type);
             ps.setString(3, coordinates);
+            ps.setInt(4, font);
+            ps.setString(5, content);
+            ps.executeUpdate();
+            return "{\"status\": \"OK\"}";
+        } catch (Exception exception) {
+            System.out.println("Database error: " + exception.getMessage());
+            return "{\"error\": \"Unable to create new item, please see server console for more info.\"}";
+        }
+    }
+
+    @POST
+    @Path("update")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String update(
+            @FormDataParam("objectID") Integer id, @FormDataParam("type") String type, @FormDataParam("coordinates") String coordinates, @FormDataParam("font") Integer font, @FormDataParam("content") String content){
+        try {
+            if (id == null || type == null || coordinates == null){
+                throw new Exception("One or more form data parameters are missing in the HTTP request.");
+            }
+            System.out.println("objects/update");
+            PreparedStatement ps = Main.db.prepareStatement("UPDATE Object SET ObjectType = ?, Coordinates = ?, Font = ?, Content = ? WHERE ObjectID = ?");
+            ps.setInt(5, id);
+            ps.setString(1, type);
+            ps.setString(2, coordinates);
+            ps.setInt(3, font);
+            ps.setString(4, content);
             ps.executeUpdate();
             return "{\"status\": \"OK\"}";
         } catch (Exception exception) {
@@ -93,16 +74,17 @@ public class Objects {
         System.out.println("objects/list/"+id);
         JSONArray list = new JSONArray();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Object WHERE QuestionTemplateID = ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Object WHERE QuestionID = ?");
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
                 JSONObject item = new JSONObject();
                 item.put("objectID", results.getInt(1));
-                item.put("templateID", results.getInt(2));
+                item.put("quizID", results.getString(2));
                 item.put("Type", results.getString(3));
                 item.put("coordinates", results.getString(4));
                 item.put("font", results.getInt(5));
+                item.put("content", results.getString(6));
                 list.add(item);
             }
             return list.toString();
@@ -117,20 +99,20 @@ public class Objects {
     @Produces(MediaType.APPLICATION_JSON)
     public String getObject(@PathParam("id") Integer id){
         System.out.println("objects/getObject");
-        JSONArray list = new JSONArray();
+        JSONObject item = new JSONObject();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Object WHERE QuestionTemplateID = ?");
+            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Object WHERE ObjectID = ?");
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                JSONObject item = new JSONObject();
-                item.put("Object ID", results.getInt(1));
-                item.put("Template ID", results.getInt(2));
+                item.put("objectID", results.getInt(1));
+                item.put("quizID", results.getString(2));
                 item.put("Type", results.getString(3));
                 item.put("coordinates", results.getString(4));
-                list.add(item);
+                item.put("font", results.getInt(5));
+                item.put("content", results.getString(6));
             }
-            return list.toString();
+            return item.toString();
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
             return"{\"error\": \"Unable to list items, please see server console for more info.\"}";

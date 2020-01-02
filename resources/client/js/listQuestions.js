@@ -31,11 +31,24 @@ function pageLoad(){
         }
         questionHTML += '</table>';
         document.getElementById("listDiv").innerHTML = questionHTML;
-
+        let editbuttons = document.getElementsByClassName("editQuestionButton");
+        for (let button of editbuttons){
+            button.addEventListener("click", goToEdit);
+        }
     });
 
 }
 
 function goToQuestion(){
     window.location.href = '/client/playQuiz.html?editor';
+}
+
+function goBack(){
+    window.location.href = '/client/displayQuiz.html';
+}
+
+function goToEdit(event){
+    event.preventDefault();
+    const questionID = event.target.getAttribute("data-id");
+    window.location.href = '/client/playQuiz.html?editorExisting='+questionID;
 }

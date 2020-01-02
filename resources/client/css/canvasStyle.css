@@ -10,9 +10,13 @@
 }
 
 #question {
-    z-index: 2;
+    z-index: 3;
 }
 
 #inputBox{
+    z-index: 2;
+}
+
+#help{
     z-index: 1;
 }

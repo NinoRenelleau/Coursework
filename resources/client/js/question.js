@@ -155,9 +155,6 @@ function initialise(){
             console.log(endQuiz);
         } else{
             questionID = questions[questNum].questionID;
-            templateID= questions[questNum].templateID;
-            instruction = questions[questNum].instruction;
-            questionData = questions[questNum].questionData;
             currentPoint = questions[questNum].Points;
             //console.log(questions[questNum]);
             totalPoints += Number(currentPoint);
@@ -166,7 +163,7 @@ function initialise(){
 
         if (!endQuiz) {
             //console.log(templateID);
-            fetch('/objects/list/' + templateID, {method: 'get'}
+            fetch('/objects/list/' + questionID, {method: 'get'}
             ).then(response => response.json()
             ).then(objects => {
                 console.log(objects);
@@ -174,45 +171,32 @@ function initialise(){
                     let coordinates = object.coordinates.split("s");
                     let x = coordinates[0];
                     let y = coordinates[1];
-                    if (object.Type == "correctButton" || object.Type == "wrongButton") {
-                        let buttonContent = questionData.split(":::");
-                        let buttonWriting;
+                    if (object.Type == "correctButtons" || object.Type == "wrongButtons") {
+                        let buttonWriting = object.content;
+                        context.fillStyle = "black";
+                        context.font = object.font+"px Arial";
                         let correct = false;
-                        if(object.Type == "correctButton") correct = true;
-                        for (let contents of buttonContent) {
-                            if (contents[0] == (object.objectID).toString()) {
-                                context.fillStyle = "black";
-                                context.font = object.font+"px Arial";
-                                buttonWriting = contents.substring(1, (contents.length));
-                            }
-                        }
+                        if(object.Type == "correctButtons") correct = true;
                         let widthOfWriting = context.measureText(buttonWriting).width;
                         context.strokeStyle = "black";
                         let boxX = Number(x) - 5;
-                        let boxY = Number(y) - 30;
                         buttons.push({
                             X: boxX,
-                            Y: boxY,
+                            Y: Number(y),
                             x: Number(x),
-                            y: Number(y),
+                            y: Number(y) + object.font - 5,
                             width: widthOfWriting + 10,
                             font: object.font,
-                            height: Number(object.font)+10,
+                            height: Number(object.font),
                             on: false,
                             content: buttonWriting,
                             correct: correct
                         });
-                    } else if (object.Type == "header") {
-                        let headerContent = questionData.split(":::");
-                        let headerWriting;
-                        for (let contents of headerContent) {
-                            if (contents[0] == (object.objectID).toString()) {
-                                context.fillStyle = "black";
-                                context.font = object.font+"px Arial";
-                                headerWriting = contents.substring(1, (contents.length - 1));
-                                //console.log(headerWriting);
-                            }
-                        }
+                    } else if (object.Type == "headers") {
+                        //let headerContent = questionData.split(":::");
+                        let headerWriting = object.content;
+                        context.fillStyle = "black";
+                        context.font = object.font+"px Arial";
                         let widthOfWriting = context.measureText(headerWriting).width;
                         context.strokeStyle = "black";
                         let boxX = Number(x) - 5;
@@ -298,36 +282,34 @@ function ratingProcess(){
         formData.append("QuizID", Cookies.get("quizID"));
         formData.append("Score", points);
         formData.append("Review", rating);
-        waitTime += 1;
-        if (waitTime >= 50){
-            let formData2 = new FormData();
-            formData2.append("ID", 0);
-            fetch('/history/update', {method: 'post', body: formData}
+
+        let formData2 = new FormData();
+        formData2.append("ID", 0);
+        fetch('/history/update', {method: 'post', body: formData}
+        ).then(response => response.json()
+        ).then(responseData =>{
+            if (responseData.hasOwnProperty('error')) {
+                alert(responseData.error);
+            }
+            fetch('/history/updateRatings', {method: 'post', body: formData2}
             ).then(response => response.json()
-            ).then(responseData =>{
-                if (responseData.hasOwnProperty('error')) {
-                    alert(responseData.error);
+            ).then(dataResponse => {
+                if (dataResponse.hasOwnProperty('error')) {
+                    alert(dataResponse.error);
                 }
-                fetch('/history/updateRatings', {method: 'post', body: formData2}
+                fetch('/history/updateCourseRatings', {method: 'post', body: formData2}
                 ).then(response => response.json()
-                ).then(dataResponse => {
-                    if (dataResponse.hasOwnProperty('error')) {
-                        alert(dataResponse.error);
+                ).then(Response => {
+                    if (Response.hasOwnProperty('error')) {
+                        alert(Response.error);
                     }
-                    fetch('/history/updateCourseRatings', {method: 'post', body: formData2}
-                    ).then(response => response.json()
-                    ).then(Response => {
-                        if (Response.hasOwnProperty('error')) {
-                            alert(Response.error);
-                        }
 
-                    });
                 });
-                parent.window.location.href = '/client/index.html';
-
             });
+            parent.window.location.href = '/client/displayQuiz.html';
 
-        }
+        });
+
     }
 
 }

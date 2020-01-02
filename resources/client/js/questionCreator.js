@@ -2,6 +2,7 @@ let mouseClicked = false;
 const mousePosition = {x: 0, y: 0, snappedT: 0};
 const pressedKeys = {};
 let input;
+let timer = 0;
 let keyDown = false;
 let write = false;
 let entered = false;
@@ -9,10 +10,8 @@ let validate = false;
 let w = 0, h = 0;
 let lastTimestamp = 0;
 let quizID;
+let existing = false;
 let questionID;
-let templateID;
-let instruction;
-let questionData;
 let minimise = false;
 let maximise = false;
 let deleteObj = false;
@@ -22,33 +21,29 @@ let brightness = 1;
 let select = false;
 let follow = false;
 let buttons = [];
-let correctButtons = [];
-let wrongButtons = [];
 let headers = [];
 let objectSelect = 0;
-let objects = [{type:"select", object: false},
+let objects = [{type:"select", object: false, help:"Select tool, click on objects to select and move them, pageUp and pageDown allows to decrease and increase the font size"},
     {name:"correctButtons", type:"buttons", code:
         "        context.strokeStyle = \"black\";\n" +
         "        context.strokeRect(mousePosition.snappedX-10, mousePosition.snappedY-20, 20, 45);\n" +
         "        context.globalCompositeOperation = \"destination-over\";\n" +
         "        context.fillStyle = \"green\";\n" +
-        "        context.fillRect(mousePosition.snappedX-10, mousePosition.snappedY-20, 20, 45);", object:true, x:"mousePosition.snappedX-10", y:"mousePosition.snappedY-20", height:40},
+        "        context.fillRect(mousePosition.snappedX-10, mousePosition.snappedY-20, 20, 45);", object:true, x:"mousePosition.snappedX-10", y:"mousePosition.snappedY-20", height:40, help:"Button (correct), click to place a button for the correct answer"},
     {name:"wrongButtons", type:"buttons", code:
             "        context.strokeStyle = \"black\";\n" +
             "        context.strokeRect(mousePosition.snappedX-10, mousePosition.snappedY-20, 20, 45);\n" +
             "        context.globalCompositeOperation = \"destination-over\";\n" +
             "        context.fillStyle = \"red\";\n" +
-            "        context.fillRect(mousePosition.snappedX-10, mousePosition.snappedY-20, 20, 45);", object:true, x:"mousePosition.snappedX-10", y:"mousePosition.snappedY-20", height:40},
+            "        context.fillRect(mousePosition.snappedX-10, mousePosition.snappedY-20, 20, 45);", object:true, x:"mousePosition.snappedX-10", y:"mousePosition.snappedY-20", height:40, help:"Button (incorrect), click to place a button for the incorrect answer"},
     {name: "headers", type:"headers", code:
             "        context.strokeStyle = \"black\";\n" +
             "        context.beginPath();\n" +
             "        context.moveTo(mousePosition.snappedX-10, mousePosition.snappedY+25);\n" +
             "        context.lineTo(mousePosition.snappedX+10, mousePosition.snappedY+25);\n" +
-            "        context.stroke();", object:true, x:"mousePosition.snappedX-10", y:"mousePosition.snappedY+25", height:45}];
+            "        context.stroke();", object:true, x:"mousePosition.snappedX-10", y:"mousePosition.snappedY+25", height:45, help:"Header, click to place a header"}];
 let totalPoints = 0;
-let endQuestion = true;
-let stars = [];
-let rating = 0;
+let endQuestion = false;
 let selected = false;
 let waitTime = 0;
 
@@ -57,29 +52,20 @@ function fixSize(){
     h = window.innerHeight;
     const canvas2 = document.getElementById('inputBox');
     const canvas = document.getElementById('question');
+    const canvas3 = document.getElementById('help');
     canvas.width = w;
     canvas.height = h;
     canvas2.height = h;
     canvas2.width = w;
+    canvas3.height = h;
+    canvas3.width = w;
 }
 
 function pageLoad(){
     totalPoints = 0;
     quizID = Cookies.get("quizID");
-
     input = new CanvasInput({
         canvas: document.getElementById('inputBox'),
-        /*fontSize: 18,
-        fontFamily: 'Arial',
-        fontColor: '#212121',
-        fontWeight: 'bold',
-        width: 300,
-        padding: 8,
-        borderWidth: 1,
-        borderColor: '#000',
-        borderRadius: 3,
-        //placeHolder: 'Enter value here...',
-        value:''*/
     });
 
     window.addEventListener("resize", fixSize);
@@ -89,6 +75,7 @@ function pageLoad(){
     window.addEventListener("keyup", event => pressedKeys[event.key] = false);
 
     const canvas = document.getElementById('question');
+    const context = canvas.getContext('2d');
     canvas.addEventListener('mousemove', event => {
         mousePosition.x = event.clientX;
         mousePosition.y = event.clientY;
@@ -100,210 +87,368 @@ function pageLoad(){
         mouseClicked = true;
     }, false);
 
+    let url = window.location.search.substring(1);
+    let param = url.split("=");
 
-    window.requestAnimationFrame(gameFrame);
-
+    if(param[0] == "Existing"){
+        existing = true;
+        questionID = param[1];
+        fetch('/objects/list/'+param[1], {method:'get'}
+        ).then(response => response.json()
+        ).then(Objects=>{
+            if (Objects.hasOwnProperty('error')){
+                alert(Objects.error);
+            } else{
+                console.log(Objects);
+                for(let object of Objects){
+                    let coordinates = object.coordinates.split("s");
+                    let x = Number(coordinates[0]);
+                    let y = Number(coordinates[1]);
+                    let width = context.measureText(object.content).width;
+                    if(object.Type == "correctButtons" || object.Type == "wrongButtons"){
+                        buttons.push({x:x, y:y, height:object.font + 5, content:object.content, width:width, type:object.Type, picked:false, font:object.font, exists: true, Id:object.objectID});
+                    } else if (object.Type == "headers"){
+                        headers.push({x:x, y:y, height:object.font + 5, content:object.content, width:width, type:object.Type, picked:false, font:object.font, exists: true, Id:object.objectID});
+                    }
+                }
+                window.requestAnimationFrame(gameFrame);
+            }
+        });
+    } else{
+        window.requestAnimationFrame(gameFrame);
+    }
 }
 
 function gameFrame(timestamp) {
     if (lastTimestamp === 0) lastTimestamp = timestamp;
     const frameLength = (timestamp - lastTimestamp) / 1000;
     lastTimestamp = timestamp;
-    //console.log(totalPoints);
-    //input.render();
 
     inputs();
-    //processes(frameLength);
-    outputs();
+    outputs(frameLength);
+    if(!(endQuestion && entered)){
+        window.requestAnimationFrame(gameFrame);
+    } else{
+        if(existing){
+            fetch('/objects/list/'+questionID, {method:'get'}
+            ).then(response => response.json()
+            ).then(Objects=> {
+                if (Objects.hasOwnProperty('error')) {
+                    alert(Objects.error);
+                }else{
+                    for(let object of Objects){
+                        let formData = new FormData();
+                        formData.append("objectId", object.objectID);
+                        fetch('/objects/delete', {method:'post', body:formData}
+                        ).then(response => response.json()
+                        ).then(responseDataDelete => {
+                            if (responseDataDelete.hasOwnProperty('error')) {
+                                alert(responseDataDelete.error);
+                            }
+                        });
+                    }
+                    let formData = new FormData();
+                    formData.append("questionID", questionID);
+                    formData.append("points", points);
+                    fetch('/questions/updatePoints', {method:'post', body:formData}
+                    ).then(response => response.json()
+                    ).then(responseData =>{
+                        if (responseData.hasOwnProperty('error')){
+                            alert(responseData.error);
+                        } else{
+                            for(let button of buttons){
+                                console.log(button);
+                                let formData2 = new FormData();
+                                formData2.append("type", button.type);
+                                formData2.append("coordinates", button.x + "s" + button.y);
+                                formData2.append("font", button.font);
+                                formData2.append("content", button.content);
+                                formData2.append("QuestionId", questionID);
+                                fetch('/objects/create', {method:'post', body:formData2}
+                                ).then(response => response.json()
+                                ).then(responseData2 =>{
+                                    if (responseData2.hasOwnProperty('error')){
+                                        alert(responseData2.error);
+                                    }
+                                });
+                            }
+                            for(let header of headers){
+                                console.log(headers);
+                                let formData2 = new FormData();
+                                formData2.append("type", header.type);
+                                formData2.append("coordinates", header.x + "s" + header.y);
+                                formData2.append("font", header.font);
+                                formData2.append("content", header.content);
+                                formData2.append("QuestionId", questionID);
+                                fetch('/objects/create', {method:'post', body:formData2}
+                                ).then(response => response.json()
+                                ).then(responseData2 =>{
+                                    if (responseData2.hasOwnProperty('error')){
+                                        alert(responseData2.error);
+                                    }
+                                });
+                            }
+                            parent.window.location.href = '/client/listQuestions.html';
+                        }
+                    });
+                }
+            });
 
-    window.requestAnimationFrame(gameFrame);
+        }else{
+            let formData = new FormData();
+            formData.append("QuizID", quizID);
+            formData.append("Points", points);
+            fetch('/questions/create', {method:'post', body:formData}
+            ).then(response => response.json()
+            ).then(responseData =>{
+                if (responseData.hasOwnProperty('error')){
+                    alert(responseData.error);
+                } else{
+                    for(let button of buttons){
+                        let formData2 = new FormData();
+                        formData2.append("QuestionId", responseData.questionID);
+                        formData2.append("type", button.type);
+                        formData2.append("coordinates", button.x + "s" + button.y);
+                        formData2.append("font", button.font);
+                        formData2.append("content", button.content);
+                        fetch('/objects/create', {method:'post', body:formData2}
+                        ).then(response => response.json()
+                        ).then(responseData2 =>{
+                            if (responseData2.hasOwnProperty('error')){
+                                alert(responseData2.error);
+                            }
+                        });
+                    }
+                    for(let header of headers){
+                        let formData2 = new FormData();
+                        formData2.append("QuestionId", responseData.questionID);
+                        formData2.append("type", header.type);
+                        formData2.append("coordinates", header.x + "s" + header.y);
+                        formData2.append("font", header.font);
+                        formData2.append("content", header.content);
+                        fetch('/objects/create', {method:'post', body:formData2}
+                        ).then(response => response.json()
+                        ).then(responseData2 =>{
+                            if (responseData2.hasOwnProperty('error')){
+                                alert(responseData2.error);
+                            }
+                        });
+                    }
+                    parent.window.location.href = '/client/listQuestions.html';
+                }
+            });
+        }
+
+    }
+
 }
 
-function outputs(){
+function outputs(frameLength){
     const canvas = document.getElementById('question');
     const canvas2 = document.getElementById('inputBox');
     const context2 = canvas2.getContext('2d');
     const context = canvas.getContext('2d');
+    const canvas3 = document.getElementById('help');
+    const context3 = canvas3.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
+    context3.clearRect(0,0, w, h);
 
-    if(!write){
-        if((objects[objectSelect].type == "write")){
+    if (endQuestion){
+        context3.font = '15px Arial';
+        context3.fillStyle = "blue";
+        context3.fillText("Press 'Enter' to save your question and exit, or press 'Escape' to go back.", 20, h/2 - 20);
+        context3.fillText("Press pageUp or PageDown to increase or decrease the amount of points the question is worth.", 20, h/2 );
+        context3.font = '20px Arial';
+        context3.fillStyle = "black";
+        context3.fillText("Points:" + points, 20, h/2 + 20);
 
-        }else if((objects[objectSelect].type == "select")) {
 
-        }
-        else{
-            context.globalAlpha = 0.5;
-            eval(objects[objectSelect].code);
-            context.globalAlpha = 1;
-        }
-    }
-
-    let x = 0;
-    if(write){
-        brightness = 0.5;
-        context2.clearRect(0, 0, canvas.width, input.y());
-        context2.clearRect(0, input.y()+input.height()+20, canvas.width, canvas.height);
     } else{
-        brightness = 1;
-        context2.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    for(let button of buttons){
-        let fontSize = button.font;
-        context.globalAlpha = brightness;
-        let colour;
-        if(button.type == "correctButtons")colour = "green";
-        else if (button.type == "wrongButtons") colour = "red";
-        if(button.picked){
-            if (follow){
-                button.x = mousePosition.x - button.width/2;
-                button.y = mousePosition.y - button.height/2;
-                if (select){
-                    follow = false;
-                    select = false;
-                }
-                if (maximise){
-                    button.font += 5;
-                    maximise = false;
-                }
-                if (minimise){
-                    button.font -= 5;
-                    minimise = false;
-                }
-            }else if (write){
+        if(!write){
+            if((objects[objectSelect].type != "select")) {
+                context.globalAlpha = 0.5;
+                eval(objects[objectSelect].code);
                 context.globalAlpha = 1;
-                button.content=input.value();
-                if(validate){
-                    input.blur();
+            }
+            if(timer <= 150){
+                timer += frameLength*30;
+                context3.font = '15px Arial';
+                context3.fillStyle = "blue";
+                context3.fillText(objects[objectSelect].help, 20, 25);
+                context3.fillText("Press pageUp and pageDown to change tool. Press 'Enter' when hovering over an object to enter text.", 20, h-25);
+                context3.fillText("Press 'Delete' when hovering over an object to delete it. Press 'Escape' to save the question.", 20, h-5);
+            }
+        }
+
+        let x = 0;
+        if(write){
+            brightness = 0.5;
+            context2.clearRect(0, 0, canvas.width, input.y());
+            context2.clearRect(0, input.y()+input.height()+20, canvas.width, canvas.height);
+        } else{
+            brightness = 1;
+            context2.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        for(let button of buttons){
+            let fontSize = button.font;
+            context.globalAlpha = brightness;
+            let colour;
+            if(button.type == "correctButtons")colour = "green";
+            else if (button.type == "wrongButtons") colour = "red";
+            if(button.picked){
+                if (follow){
+                    button.x = mousePosition.x - button.width/2;
+                    button.y = mousePosition.y - button.height/2;
+                    if (select){
+                        follow = false;
+                        select = false;
+                    }
+                    if (maximise){
+                        button.font += 5;
+                        maximise = false;
+                    }
+                    if (minimise){
+                        button.font -= 5;
+                        minimise = false;
+                    }
+                }else if (write){
+                    context.globalAlpha = 1;
+                    button.content=input.value();
+                    if(validate){
+                        input.blur();
+                        button.picked = false;
+                        write = false;
+                        canvas.style.zIndex = "2";
+                        canvas2.style.zIndex = "1";
+                        validate = false;
+                    }
+                } else{
                     button.picked = false;
-                    write = false;
-                    canvas.style.zIndex = "2";
-                    canvas2.style.zIndex = "1";
-                    validate = false;
                 }
-            } else{
-                button.picked = false;
-            }
 
-        }
-        context.font = fontSize+'px Arial';
-        context.fillStyle = "black";
-        let widthOfWriting = context.measureText(button.content).width;
-        if(button.content == "")widthOfWriting=20;
-        button.width = widthOfWriting;
-        context.fillText(button.content, button.x, button.y+fontSize-5);
-        context.strokeStyle = "black";
-        context.strokeRect(button.x, button.y, widthOfWriting, fontSize+5);
-        context.globalCompositeOperation = "destination-over";
-        context.fillStyle = colour;
-        context.fillRect(button.x, button.y, widthOfWriting, fontSize+5);
-        if (isInside(button)){
-            context.globalAlpha = 0.5;
-            context.strokeStyle = "black";
-            context.strokeRect(button.x-3, button.y-3, widthOfWriting+6, button.font+11);
-            context.globalAlpha = 1;
-            if(deleteObj){
-                buttons.splice(x, 1);
-                deleteObj = false;
-            }else if(entered){
-                entered = false;
-                write = true;
-                button.picked = true;
-                context2.clearRect(0, 0, canvas.width, canvas.height);
-                input.x(button.x);
-                input.y(button.y + 50);
-                input.value(button.content);
-                input.focus();
-                context2.clearRect(0, 0, canvas.width, input.y());
-                context2.clearRect(0, input.y()+input.height()+20, canvas.width, canvas.height);
-                canvas.style.zIndex = "1";
-                canvas2.style.zIndex = "2";
-            } else if (select && !follow){
-                follow = true;
-                button.picked = true;
-                select = false;
             }
-        }
-        x++;
-    }
-    x = 0;
-    for(let header of headers){
-        let fontSize = header.font;
-        context.globalAlpha = brightness;
-        if(header.picked){
-            if (follow){
-                header.x = mousePosition.x - header.width/2;
-                header.y = mousePosition.y + header.height/2;
-                if (select){
-                    console.log("false");
-                    follow = false;
+            context.font = fontSize+'px Arial';
+            context.fillStyle = "black";
+            let widthOfWriting = context.measureText(button.content).width;
+            if(button.content == "")widthOfWriting=20;
+            button.width = widthOfWriting;
+            button.height = fontSize+5;
+            context.fillText(button.content, button.x, button.y+fontSize-5);
+            context.globalCompositeOperation = "destination-over";
+            context.strokeStyle = "black";
+            context.strokeRect(button.x, button.y, widthOfWriting, fontSize+5);
+            context.globalCompositeOperation = "destination-over";
+            context.fillStyle = colour;
+            context.fillRect(button.x, button.y, widthOfWriting, fontSize+5);
+            if (isInside(button)){
+                context.globalAlpha = 0.5;
+                context.strokeStyle = "black";
+                context.strokeRect(button.x-3, button.y-3, widthOfWriting+6, button.font+11);
+                context.globalAlpha = 1;
+                if(deleteObj){
+                    buttons.splice(x, 1);
+                    deleteObj = false;
+                }else if(entered){
+                    entered = false;
+                    write = true;
+                    button.picked = true;
+                    context2.clearRect(0, 0, canvas.width, canvas.height);
+                    input.x(button.x);
+                    input.y(button.y + 50);
+                    input.value(button.content);
+                    input.focus();
+                    context2.clearRect(0, 0, canvas.width, input.y());
+                    context2.clearRect(0, input.y()+input.height()+20, canvas.width, canvas.height);
+                    canvas.style.zIndex = "1";
+                    canvas2.style.zIndex = "2";
+                } else if (select && !follow){
+                    follow = true;
+                    button.picked = true;
                     select = false;
                 }
-                if (maximise){
-                    header.font += 5;
-                    maximise = false;
-                }
-                if (minimise){
-                    header.font -= 5;
-                    minimise = false;
-                }
-            } else if (write){
-                context.globalAlpha = 1;
-                header.content=input.value();
-                if(validate){
-                    input.blur();
+            }
+            x++;
+        }
+        x = 0;
+        for(let header of headers){
+            let fontSize = header.font;
+            context.globalAlpha = brightness;
+            if(header.picked){
+                if (follow){
+                    header.x = mousePosition.x - header.width/2;
+                    header.y = mousePosition.y + header.height/2;
+                    if (select){
+                        console.log("false");
+                        follow = false;
+                        select = false;
+                    }
+                    if (maximise){
+                        header.font += 5;
+                        maximise = false;
+                    }
+                    if (minimise){
+                        header.font -= 5;
+                        minimise = false;
+                    }
+                } else if (write){
+                    context.globalAlpha = 1;
+                    header.content=input.value();
+                    if(validate){
+                        input.blur();
+                        header.picked = false;
+                        write = false;
+                        canvas.style.zIndex = "2";
+                        canvas2.style.zIndex = "1";
+                        validate = false;
+                    }
+                }else{
                     header.picked = false;
-                    write = false;
-                    canvas.style.zIndex = "2";
-                    canvas2.style.zIndex = "1";
-                    validate = false;
                 }
-            }else{
-                header.picked = false;
             }
-        }
 
-        context.font = fontSize+'px Arial';
-        context.fillStyle = "black";
-        context.fillText(header.content, header.x, header.y-5);
-        let widthOfWriting = context.measureText(header.content).width;
-        if(header.content == "")widthOfWriting=20;
-        header.width = widthOfWriting;
-        context.strokeStyle = "black";
-        context.beginPath();
-        context.moveTo(header.x, header.y);
-        context.lineTo(header.x+widthOfWriting, header.y);
-        context.stroke();
-        if (isInside(header)){
-            context.globalAlpha = 0.5;
+            context.font = fontSize+'px Arial';
+            context.fillStyle = "black";
+            context.fillText(header.content, header.x, header.y-5);
+            let widthOfWriting = context.measureText(header.content).width;
+            if(header.content == "")widthOfWriting=20;
+            header.width = widthOfWriting;
             context.strokeStyle = "black";
-            context.strokeRect(header.x, header.y-header.font, widthOfWriting, header.font);
-            context.globalAlpha = 1;
-            if(deleteObj){
-                headers.splice(x, 1);
-                deleteObj = false;
-            }else if(entered){
-                entered = false;
-                write = true;
-                header.picked = true;
-                context2.clearRect(0, 0, canvas.width, canvas.height);
-                input.x(header.x);
-                input.y(header.y);
-                input.value(header.content);
-                input.focus();
-                context2.clearRect(0, 0, canvas.width, input.y());
-                context2.clearRect(0, input.y()+input.height()+20, canvas.width, canvas.height);
-                canvas.style.zIndex = "1";
-                canvas2.style.zIndex = "2";
-            } else if (select && !follow){
-                follow = true;
-                header.picked = true;
-                select = false;
+            context.beginPath();
+            context.moveTo(header.x, header.y);
+            context.lineTo(header.x+widthOfWriting, header.y);
+            context.stroke();
+            if (isInside(header)){
+                context.globalAlpha = 0.5;
+                context.strokeStyle = "black";
+                context.strokeRect(header.x, header.y-header.font, widthOfWriting, header.font);
+                context.globalAlpha = 1;
+                if(deleteObj){
+                    headers.splice(x, 1);
+                    deleteObj = false;
+                }else if(entered){
+                    entered = false;
+                    write = true;
+                    header.picked = true;
+                    context2.clearRect(0, 0, canvas.width, canvas.height);
+                    input.x(header.x);
+                    input.y(header.y);
+                    input.value(header.content);
+                    input.focus();
+                    context2.clearRect(0, 0, canvas.width, input.y());
+                    context2.clearRect(0, input.y()+input.height()+20, canvas.width, canvas.height);
+                    canvas.style.zIndex = "1";
+                    canvas2.style.zIndex = "2";
+                } else if (select && !follow){
+                    follow = true;
+                    header.picked = true;
+                    select = false;
+                }
             }
+            x ++;
         }
-        x ++;
+        select = false;
     }
-    select = false;
+
 }
 function inputs(){
     const canvas = document.getElementById('question');
@@ -313,7 +458,7 @@ function inputs(){
         //console.log("pushed");
         let object = objects[objectSelect]
         if(object.object){
-            eval(object.type).push({x:eval(object.x), y:eval(object.y), width:20, height:object.height, content:"", type:object.name, picked:false, font:40});
+            eval(object.type).push({x:eval(object.x), y:eval(object.y), height:object.height, content:"", type:object.name, picked:false, font:40});
         }else{
             select = true;
             console.log("true");
@@ -324,10 +469,11 @@ function inputs(){
 
     if(pressedKeys["PageUp"]) {
         //console.log("next");
-        if (!write && !follow){
+        if (!write && !follow && !endQuestion){
             if (!keyDown) {
                 objectSelect++;
                 if (objectSelect > 3) objectSelect = 0;
+                timer = 0;
                 keyDown = true;
             }
         } else if (follow){
@@ -335,17 +481,30 @@ function inputs(){
                 maximise = true;
                 keyDown = true;
             }
+        }else if (endQuestion){
+            if(!keyDown){
+                points ++;
+                keyDown = true;
+            }
         }
     } else if (pressedKeys["PageDown"]){
-        if(!write && !follow){
+        if(!write && !follow && !endQuestion){
             if(!keyDown){
                 objectSelect --;
                 if(objectSelect < 0)objectSelect = 3;
+                timer = 0;
                 keyDown = true;
             }
         } else if (follow){
             if(!keyDown){
                 minimise = true;
+                keyDown = true;
+            }
+        }else if (endQuestion){
+            if(!keyDown){
+                if(points!= 0){
+                    points--;
+                }
                 keyDown = true;
             }
         }
@@ -359,77 +518,27 @@ function inputs(){
             keyDown = true
         }
     }
-    else if(pressedKeys["Delete"] && !write && !follow){
+    else if(pressedKeys["Delete"] && !write && !follow && !endQuestion){
         if(!keyDown){
             deleteObj = true;
             keyDown = true
+        }
+    }else if (pressedKeys["Escape"]){
+        if(!keyDown){
+            if (endQuestion){
+                endQuestion = false;
+            } else{
+                endQuestion = true;
+            }
+            keyDown = true;
         }
     }else{
         entered = false;
         keyDown = false;
         deleteObj = false;
+        escaped = false;
     }
 
-
-    /*for (let button of buttons){
-        if(isInside(button)){
-            button.on = true;
-        } else{
-            button.on = false;
-        }
-    }*/
-}
-
-function processes(){
-    const canvas = document.getElementById('question');
-    const context = canvas.getContext('2d');
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = "blue";
-    context.font = "20px Arial";
-    context.fillText(points, 50, 68);
-    for (let button of buttons){
-        if(button.on){
-            console.log(button.correct);
-            context.fillStyle = "black";
-            context.font = "30px Arial";
-            context.fillText(button.content, button.x, button.y);
-            context.globalCompositeOperation = "destination-over";
-            context.strokeStyle = "black";
-            context.strokeRect(button.X, button.Y, button.width, button.height);
-            context.globalCompositeOperation = "destination-over";
-            context.fillStyle = "green";
-            context.fillRect(button.X, button.Y, button.width, button.height);
-            if(mouseClicked && button.correct){
-                points += Number(Cookies.get("currentPoint"));
-                clearAll();
-                mouseClicked = false;
-                endQuestion = true;
-            } else if (mouseClicked && !button.correct){
-                clearAll();
-                mouseClicked = false;
-                endQuestion = true;
-            }
-        } else{
-            context.fillStyle = "black";
-            context.font = "30px Arial";
-            context.fillText(button.content, button.x, button.y);
-            context.globalCompositeOperation = "destination-over";
-            context.strokeStyle = "black";
-            context.strokeRect(button.X, button.Y, button.width, button.height);
-            context.globalCompositeOperation = "destination-over";
-        }
-    }
-    for (let header of headers){
-        context.fillStyle = "black";
-        context.font = "50px Arial";
-        context.fillText(header.content, header.x, header.y);
-        context.strokeStyle = "black";
-        context.beginPath();
-        context.moveTo(header.boxX, header.boxY);
-        context.lineTo(header.width + header.x, header.boxY);
-        context.stroke();
-    }
-    mouseClicked = false;
 }
 
 function isInside(rect){
@@ -444,140 +553,10 @@ function isInside(rect){
     }
 }
 
-function isInsideStar(star){
-    let y = (2*h)/3;
-    let distance = Math.floor(Math.sqrt(((Number(mousePosition.x) - Number(star.x))*(Number(mousePosition.x) - Number(star.x))) + ((Number(mousePosition.y) - Number(y))*(Number(mousePosition.y) - Number(y)))));
-    return distance <= 20;
-}
-
-
-function ratingProcess(){
-    const canvas = document.getElementById('question');
-    const context = canvas.getContext('2d');
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    let percentage = Math.floor((points/totalPoints)*100);
-    context.fillStyle = "white";
-    context.font = "30px Arial";
-    context.fillText((percentage+"%"), (w/2)-295, (h/2)+10);
-    context.globalCompositeOperation = "destination-over";
-    context.strokeStyle = "black";
-    context.strokeRect((w/2)-300, (h/2)-20, 600, 40);
-    context.globalCompositeOperation = "destination-over";
-    context.fillStyle = "blue";
-    context.fillRect((w/2)-300, (h/2)-20, percentage*6, 40);
-
-    for (let star of stars){
-        if(isInsideStar(star)){
-            star.selected = true;
-            selected = true;
-        } else{
-            star.selected = false;
-        }
-
-        if(star.selected){
-            rating = star.num + 1;
-        }
-    }
-    console.log(rating);
-    if (!(mouseClicked && selected)) {
-        for (let star of stars) {
-            if (rating - 1 >= star.num) {
-                drawStar(Number(star.x), (2 * h) / 3, 5, 30, 15, "yellow");
-            } else {
-                drawStar(Number(star.x), (2 * h) / 3, 5, 30, 15, "black");
-            }
-        }
-        mouseClicked = false;
-        rating = 0;
-    } else{
-        context.fillStyle = "black";
-        context.font = "30px Arial";
-        context.fillText("Quiz Completed, Saving...", (w/6), ((2 * h) / 3)-30);
-        let formData = new FormData();
-        formData.append("QuizID", Cookies.get("quizID"));
-        formData.append("Score", points);
-        formData.append("Review", rating);
-        waitTime += 1;
-        if (waitTime >= 150){
-            let formData2 = new FormData();
-            formData2.append("ID", 0);
-            fetch('/history/update', {method: 'post', body: formData}
-            ).then(response => response.json()
-            ).then(responseData =>{
-                if (responseData.hasOwnProperty('error')) {
-                    alert(responseData.error);
-                }
-                fetch('/history/updateRatings', {method: 'post', body: formData2}
-                ).then(response => response.json()
-                ).then(dataResponse => {
-                    if (dataResponse.hasOwnProperty('error')) {
-                        alert(dataResponse.error);
-                    }
-                    fetch('/history/updateCourseRatings', {method: 'post', body: formData2}
-                    ).then(response => response.json()
-                    ).then(Response => {
-                        if (Response.hasOwnProperty('error')) {
-                            alert(Response.error);
-                        }
-
-                    });
-                });
-                parent.window.location.href = '/client/index.html';
-
-            });
-
-        }
-    }
-
-}
-
 function clearAll(){
     const canvas = document.getElementById('question');
     const context = canvas.getContext('2d');
-    /*for(let button in buttons){
-        console.log(buttons[button]);
-        delete buttons[button];
-        buttons.pop()
-    }
-    console.log(buttons);
-    for(let header in headers) {
-        delete headers[header];
-        headers.pop();
-    }*/
     headers = [];
     buttons = [];
     context.clearRect(0, 0, canvas.width, canvas.height);
 }
-
-function drawStar(cx, cy, spikes, outerRadius, innerRadius, colour) {
-    const canvas = document.getElementById('question');
-    const context = canvas.getContext('2d');
-
-    let rot = Math.PI / 2 * 3;
-    let x = cx;
-    let y = cy;
-    let step = Math.PI / spikes;
-
-    context.strokeSyle = "#000";
-    context.beginPath();
-    context.moveTo(cx, cy - outerRadius)
-    for (let i = 0; i < spikes ; i++) {
-        x = cx + Math.cos(rot) * outerRadius;
-        y = cy + Math.sin(rot) * outerRadius;
-        context.lineTo(x, y)
-        rot += step
-
-        x = cx + Math.cos(rot) * innerRadius;
-        y = cy + Math.sin(rot) * innerRadius;
-        context.lineTo(x, y)
-        rot += step
-    }
-    context.lineTo(cx, cy - outerRadius)
-    context.closePath();
-    context.lineWidth=5;
-    context.strokeStyle='grey';
-    context.stroke();
-    context.fillStyle=colour;
-    context.fill();
-}
-

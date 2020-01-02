@@ -70,3 +70,7 @@ function removeTag(){
         document.getElementById("tagAssembled").innerText = newText;
     }
 }
+
+function goBack(){
+    window.location.href = '/client/index.html';
+}

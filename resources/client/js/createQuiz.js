@@ -23,3 +23,7 @@ function create(event){
         alert("Must enter a quiz name");
     }
 }
+
+function goBack(){
+    window.location.href = '/client/displayQuiz.html';
+}

@@ -54,56 +54,41 @@ function initialise() {
         Cookies.set('instruction', questions[questNum].instruction);
         Cookies.set('questionData', questions[questNum].questionData);*/
         let questionID = questions[questNum].questionID;
-        let templateID = questions[questNum].templateID;
-        let instruction = questions[questNum].instruction;
-        let questionData = questions[questNum].questionData;
         console.log(questNum);
         console.log(questions[questNum]);
         //templateID = Cookies.get('templateID');
-        fetch('/objects/list/' + templateID, {method: 'get'}
+        fetch('/objects/list/' + questionID, {method: 'get'}
         ).then(response => response.json()
         ).then(objects => {
             for (let object of objects) {
                 let coordinates = object.coordinates.split("s");
                 let x = coordinates[0];
                 let y = coordinates[1];
-                if (object.Type == "correctButton" || object.Type == "wrongButton") {
-                    let buttonContent = questionData.split(":::");
-                    let buttonWriting;
+                if (object.Type == "correctButtons" || object.Type == "wrongButtons") {
+                    context.fillStyle = "black";
+                    context.font = object.font+"px Arial";
+                    let buttonWriting = object.content;
                     let correct = false;
-                    if (object.Type == "correctButton") correct = true;
-                    for (let contents of buttonContent) {
-                        if (contents[0] == (object.objectID).toString()) {
-                            context.fillStyle = "black";
-                            context.font = "30px Arial";
-                            buttonWriting = contents.substring(1, (contents.length));
-                        }
-                    }
+                    if (object.Type == "correctButtons") correct = true;
                     let widthOfWriting = context.measureText(buttonWriting).width;
                     context.strokeStyle = "black";
                     let boxX = Number(x) - 5;
-                    let boxY = Number(y) - 30;
                     buttons.push({
                         X: boxX,
-                        Y: boxY,
+                        Y: Number(y),
                         x: Number(x),
-                        y: Number(y),
+                        y: Number(y)+object.font - 5,
                         width: widthOfWriting + 10,
-                        height: 40,
+                        font: object.font,
+                        height: object.font+10,
                         on: false,
                         content: buttonWriting,
                         correct: correct
                     });
-                } else if (object.Type == "header") {
-                    let headerContent = questionData.split(":::");
-                    let headerWriting;
-                    for (let contents of headerContent) {
-                        if (contents[0] == (object.objectID).toString()) {
-                            context.fillStyle = "black";
-                            context.font = "50px Arial";
-                            headerWriting = contents.substring(1, (contents.length - 1));
-                        }
-                    }
+                } else if (object.Type == "headers") {
+                    let headerWriting = object.content;
+                    context.fillStyle = "black";
+                    context.font = object.font+"px Arial";
                     let widthOfWriting = context.measureText(headerWriting).width;
                     context.strokeStyle = "black";
                     let boxX = Number(x) - 5;
@@ -113,6 +98,7 @@ function initialise() {
                         boxY: boxY,
                         x: Number(x),
                         y: Number(y),
+                        font: object.font,
                         content: headerWriting,
                         width: widthOfWriting
                     });
@@ -133,7 +119,7 @@ function processes(){
         if (button.correct){
             console.log(button.correct);
             context.fillStyle = "black";
-            context.font = "30px Arial";
+            context.font = button.font+"px Arial";
             context.fillText(button.content, button.x, button.y);
             context.globalCompositeOperation = "destination-over";
             context.strokeStyle = "black";
@@ -143,7 +129,7 @@ function processes(){
             context.fillRect(button.X, button.Y, button.width, button.height);
         }else{
             context.fillStyle = "black";
-            context.font = "30px Arial";
+            context.font = button.font+"px Arial";
             context.fillText(button.content, button.x, button.y);
             context.globalCompositeOperation = "destination-over";
             context.strokeStyle = "black";
@@ -155,7 +141,7 @@ function processes(){
     }
     for (let header of headers){
         context.fillStyle = "black";
-        context.font = "50px Arial";
+        context.font = header.font+"px Arial";
         context.fillText(header.content, header.x, header.y);
         context.strokeStyle = "black";
         context.beginPath();

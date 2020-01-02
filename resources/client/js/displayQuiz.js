@@ -123,3 +123,6 @@ function createAquiz(event) {
     event.preventDefault();
     window.location.href = '/client/createQuiz.html';
 }
+function goBack() {
+    window.location.href = '/client/index.html';
+}
