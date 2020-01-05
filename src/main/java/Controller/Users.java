@@ -188,7 +188,15 @@ public class Users {
             }
             System.out.println("users/create");
             if(!((usernameValid(username) == null) && (passwordValid(password) == null) && (userTypeValid(userType) == null))){
-                String message = usernameValid(username) + "\r\n" + passwordValid(password) + "\r\n" + userTypeValid(userType);
+                String message = "";
+                if (usernameValid(username) != null){
+                    message += usernameValid(username) + "\r\n";
+                } if (passwordValid(password) != null){
+                    message += passwordValid(password) + "\r\n";
+                }if(userTypeValid(userType) != null){
+                    message += userTypeValid(userType) + "\r\n";
+                }
+                System.out.println(message);
                 return "{\"error\":\""+ message +"\"}";
             } else{
 
@@ -199,8 +207,8 @@ public class Users {
                 ps.setString(3, userType);
                 ps.setString(4, prepareTags(tags));
                 ps.execute();
+                return "{\"status\": \"OK\"}";
             }
-            return "{\"status\": \"OK\"}";
         } catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
             return "{\"error\": \"Unable to create new item, please see server console for more info.\"}";
