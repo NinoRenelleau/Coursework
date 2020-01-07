@@ -88,7 +88,9 @@ public class Questions {
             if (id == null) {
                 throw new Exception("Form data parameter is missing in the HTTP request.");
             }
-            PreparedStatement ps1 = Main.db.prepareStatement("SELECT UserID From Courses INNER JOIN Quizzes ON Quizzes.CourseID = Courses.CourseID INNER JOIN Questions ON Questions.QuizID = Quizzes.QuizID Where QuestionID = ?");
+            PreparedStatement ps1 = Main.db.prepareStatement(
+                    "SELECT UserID From Courses INNER JOIN Quizzes ON Quizzes.CourseID = Courses.CourseID " +
+                            "INNER JOIN Questions ON Questions.QuizID = Quizzes.QuizID Where QuestionID = ?");
             ps1.setInt(1, id);
             ResultSet results = ps1.executeQuery();
             int userID = results.getInt(1);
@@ -115,7 +117,6 @@ public class Questions {
                 PreparedStatement ps = Main.db.prepareStatement("DELETE FROM Questions WHERE QuestionID = ?");
                 ps.setInt(1, id);
                 ps.executeUpdate();
-
                 return "{\"status\": \"OK\"}";
             }else {
                 return "{\"error\": \"user does not correspond to the creator of this course.\"}";

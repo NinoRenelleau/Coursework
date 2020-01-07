@@ -22,13 +22,16 @@ public class Objects {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(
-            @FormDataParam("QuestionId") Integer id, @FormDataParam("type") String type, @FormDataParam("coordinates") String coordinates, @FormDataParam("font") Integer font, @FormDataParam("content") String content){
+            @FormDataParam("QuestionId") Integer id,
+            @FormDataParam("type") String type, @FormDataParam("coordinates") String coordinates,
+            @FormDataParam("font") Integer font, @FormDataParam("content") String content){
         try {
             if (id == null || type == null || coordinates == null){
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
             System.out.println("objects/create");
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Object (QuestionID, ObjectType, Coordinates, Font, Content) VALUES (?, ?, ?, ?, ?)");
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "INSERT INTO Object (QuestionID, ObjectType, Coordinates, Font, Content) VALUES (?, ?, ?, ?, ?)");
             ps.setInt(1, id);
             ps.setString(2, type);
             ps.setString(3, coordinates);
