@@ -303,13 +303,11 @@ function ratingProcess(){
                     if (Response.hasOwnProperty('error')) {
                         alert(Response.error);
                     }
-
+                    parent.window.location.href = '/client/displayQuiz.html';
                 });
             });
-            parent.window.location.href = '/client/displayQuiz.html';
-
         });
-
+        parent.window.location.href = '/client/displayQuiz.html';
     }
 
 }

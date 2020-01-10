@@ -68,7 +68,7 @@ public class History {
             PreparedStatement ps1 = Main.db.prepareStatement("SELECT QuizID FROM Quizzes");
             ResultSet results = ps1.executeQuery();
             while (results.next()){
-                System.out.println("history/update");
+                System.out.println("history/update/rating");
                 PreparedStatement ps = Main.db.prepareStatement(
                         "UPDATE Quizzes SET Rating = " +
                                 "(SELECT AVG(Review) FROM History WHERE QuizID = ?) WHERE QuizID = ?");
