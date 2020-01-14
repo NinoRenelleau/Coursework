@@ -25,14 +25,17 @@ public class Quizzes {
             Integer courseID = Integer.parseInt(id.split("s")[0]);
             Integer userID = Integer.parseInt(id.split("s")[1]);
             System.out.println(Score(1, userID));
-            PreparedStatement ps = Main.db.prepareStatement("SELECT CourseName, QuizID, QuizName, Quizzes.Rating FROM Quizzes " +
-                    "INNER JOIN Courses ON Courses.CourseID = Quizzes.CourseID WHERE Quizzes.CourseID = ? ");
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "SELECT CourseName, QuizID, QuizName, Quizzes.Rating FROM Quizzes " +
+                    "INNER JOIN Courses ON Courses.CourseID = Quizzes.CourseID " +
+                            "WHERE Quizzes.CourseID = ? ");
             ps.setInt(1, courseID);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-
                 PreparedStatement ps1 = Main.db.prepareStatement(
-                        "SELECT SUM(Points) FROM Quizzes INNER JOIN Questions Q on Quizzes.QuizID = Q.QuizID WHERE Quizzes.QuizID = ?");
+                        "SELECT SUM(Points) FROM Quizzes INNER JOIN " +
+                                "Questions Q on Quizzes.QuizID = Q.QuizID " +
+                                "WHERE Quizzes.QuizID = ?");
                 ps1.setInt(1, results.getInt(2));
                 ResultSet results1 = ps1.executeQuery();
                 JSONObject item = new JSONObject();
@@ -218,20 +221,24 @@ public class Quizzes {
 
     public static Integer Score(Integer quizID, Integer userID){
         try{
-            PreparedStatement ps1 = Main.db.prepareStatement("SELECT EXISTS(SELECT Score FROM History INNER JOIN Quizzes Q on History.QuizID = Q.QuizID WHERE History.QuizID = ? AND UserID = ?) ");
+            PreparedStatement ps1 = Main.db.prepareStatement(
+                    "SELECT EXISTS(SELECT Score FROM History " +
+                            "INNER JOIN Quizzes Q on History.QuizID = Q.QuizID " +
+                            "WHERE History.QuizID = ? AND UserID = ?) ");
             ps1.setInt(1, quizID);
             ps1.setInt(2, userID);
             ResultSet results1 = ps1.executeQuery();
             System.out.println(results1);
             if(results1.getBoolean(1)){
-                PreparedStatement ps = Main.db.prepareStatement("SELECT Score FROM History INNER JOIN Quizzes Q on History.QuizID = Q.QuizID WHERE History.QuizID = ? AND UserID = ?");
+                PreparedStatement ps = Main.db.prepareStatement(
+                        "SELECT Score FROM History INNER JOIN Quizzes Q " +
+                                "on History.QuizID = Q.QuizID WHERE History.QuizID = ? AND UserID = ?");
                 ps.setInt(1, quizID);
                 ps.setInt(2, userID);
                 ResultSet results = ps.executeQuery();
                 System.out.println(results);
                 return results.getInt(1);
             }
-
         }catch (Exception exception) {
             System.out.println("Database error: " + exception.getMessage());
             return null;

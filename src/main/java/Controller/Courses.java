@@ -23,12 +23,17 @@ public class Courses {
         System.out.println("courses/list");
         JSONArray list = new JSONArray();
         try {
-
             PreparedStatement ps = Main.db.prepareStatement(
-                    "SELECT CourseID, Username, CourseName, Courses.Tags, Rating FROM Courses INNER JOIN Users ON Courses.UserID = Users.UserID ORDER BY Rating DESC");
+                    "SELECT CourseID, Username, CourseName, Courses.Tags, " +
+                            "Rating FROM Courses INNER JOIN Users " +
+                            "ON Courses.UserID = Users.UserID ORDER BY Rating DESC");
             ResultSet results = ps.executeQuery();
             while (results.next()) {
-                PreparedStatement ps1 = Main.db.prepareStatement("SELECT SUM(Points) From Courses INNER JOIN Quizzes ON Courses.CourseID = Quizzes.CourseID INNER JOIN Questions Q ON Quizzes.QuizID = Q.QuizID WHERE Courses.CourseID = ?");
+                PreparedStatement ps1 = Main.db.prepareStatement(
+                        "SELECT SUM(Points) From Courses INNER JOIN " +
+                                "Quizzes ON Courses.CourseID = Quizzes.CourseID " +
+                                "INNER JOIN Questions Q ON Quizzes.QuizID = Q.QuizID " +
+                                "WHERE Courses.CourseID = ?");
                 ps1.setInt(1, results.getInt(1));
                 ResultSet results1 = ps1.executeQuery();
                 JSONObject item = new JSONObject();
@@ -39,7 +44,10 @@ public class Courses {
                 item.put("rating", results.getString(5));
                 item.put("Total", results1.getInt(1));
                 if (id != null){
-                    PreparedStatement ps2 = Main.db.prepareStatement("SELECT SUM(Score) FROM History INNER JOIN Quizzes ON Quizzes.QuizID = History.QuizID WHERE Quizzes.CourseID = ? AND History.UserID = ?");
+                    PreparedStatement ps2 = Main.db.prepareStatement(
+                            "SELECT SUM(Score) FROM History INNER JOIN " +
+                                    "Quizzes ON Quizzes.QuizID = History.QuizID " +
+                                    "WHERE Quizzes.CourseID = ? AND History.UserID = ?");
                     ps2.setInt(1, results.getInt(1));
                     ps2.setInt(2, id);
                     ResultSet results2 = ps2.executeQuery();
