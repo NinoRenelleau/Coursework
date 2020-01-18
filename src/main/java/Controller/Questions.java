@@ -42,14 +42,16 @@ public class Questions {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
     public String create(
-            @FormDataParam("QuizID") Integer quizID, @FormDataParam("Points") Integer points){
+            @FormDataParam("QuizID") Integer quizID,
+            @FormDataParam("Points") Integer points){
         try {
             if (quizID == null || points == null){
                 throw new Exception("One or more form data parameters are missing in the HTTP request.");
             }
             JSONObject item = new JSONObject();
             System.out.println("questions/create");
-            PreparedStatement ps1 = Main.db.prepareStatement("SELECT OrderNum FROM Questions");
+            PreparedStatement ps1 = Main.db.prepareStatement(
+                    "SELECT OrderNum FROM Questions");
             ResultSet results = ps1.executeQuery();
             Integer order = 0;
             Integer last = 0;
@@ -60,12 +62,16 @@ public class Questions {
                 }
             }
             order ++;
-            PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Questions (OrderNum, Points, QuizID) VALUES (?, ?, ?)");
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "INSERT INTO Questions (OrderNum, Points, QuizID) " +
+                            "VALUES (?, ?, ?)");
             ps.setInt(1, order);
             ps.setInt(2, points);
             ps.setInt(3, quizID);
             ps.executeUpdate();
-            PreparedStatement ps2 = Main.db.prepareStatement("SELECT QuestionID FROM Questions WHERE OrderNum = ? AND QuizID = ?");
+            PreparedStatement ps2 = Main.db.prepareStatement(
+                    "SELECT QuestionID FROM Questions WHERE " +
+                            "OrderNum = ? AND QuizID = ?");
             ps2.setInt(1, order);
             ps2.setInt(2, quizID);
             ResultSet results2 = ps2.executeQuery();

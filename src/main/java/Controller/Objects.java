@@ -77,7 +77,8 @@ public class Objects {
         System.out.println("objects/list/"+id);
         JSONArray list = new JSONArray();
         try {
-            PreparedStatement ps = Main.db.prepareStatement("SELECT * FROM Object WHERE QuestionID = ?");
+            PreparedStatement ps = Main.db.prepareStatement(
+                    "SELECT * FROM Object WHERE QuestionID = ?");
             ps.setInt(1, id);
             ResultSet results = ps.executeQuery();
             while (results.next()) {
