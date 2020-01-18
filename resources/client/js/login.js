@@ -30,7 +30,7 @@ function pageLoad(){
             '            <input type="password" name="password" id="password">\n' +
             '        </div>\n' +
             '        <div class="loginDiv">\n' +
-            '            <p>Add tags to describe your account: <p/>\n' +
+            '            <p>Are you a teacher or a student: <p/>\n' +
             '            <select id="userType" style="vertical-align: middle; display: inline;" name="tags">\n' +
             '                <option value="student">Student</option>\n' +
             '                <option value="teacher">Teacher</option>\n' +

@@ -1,5 +1,5 @@
 body {
-    background-color: navy;
+    background-color: #00ffa9;
     margin: 0;
     font-family: 'Arial', serif;
 }
@@ -47,18 +47,18 @@ th.last {
 }
 
 .tag{
-    color: blue;
+    color: limegreen;
 }
 
 .tag:hover{
     text-decoration: underline;
-    color: blue;
+    color: limegreen;
 }
 
 #pageHeader {
     margin-bottom: 20px;
     border-bottom: 3px solid black;
-    background-color: lightblue;
+    background-color: lightgreen;
     padding: 10px;
 }
 
@@ -81,7 +81,7 @@ th.last {
 .signUp {
     background:none;
     border:none;
-    color: blue;
+    color: limegreen;
 }
 .signUp:hover{
     text-decoration: underline;
