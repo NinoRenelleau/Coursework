@@ -1,4 +1,4 @@
-let mouseClicked = false;
+ let mouseClicked = false;
 const mousePosition = {x: 0, y: 0, snappedT: 0};
 const pressedKeys = {};
 let input;
