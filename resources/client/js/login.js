@@ -93,7 +93,15 @@ function create(event) {
     ).then(response => response.json()
     ).then(responseData => {
         if (responseData.hasOwnProperty('error')){
-            alert(responseData.error);
+            if(!(responseData.username === undefined)){
+                alert(responseData.username);
+            }
+            if(!(responseData.password === undefined)){
+                alert(responseData.password);
+            }
+            if(!(responseData.userType === undefined)){
+                alert(responseData.userType);
+            }
         } else{
             window.location.href = '/client/login.html?login';
         }

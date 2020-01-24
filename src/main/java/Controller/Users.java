@@ -188,16 +188,16 @@ public class Users {
             }
             System.out.println("users/create");
             if(!((usernameValid(username) == null) && (passwordValid(password) == null) && (userTypeValid(userType) == null))){
-                String message = "";
+                JSONObject item = new JSONObject();
+                item.put("error", true);
                 if (usernameValid(username) != null){
-                    message += usernameValid(username) + "\r\n";
+                    item.put("username", "Inputted username is invalid:" + usernameValid(username));
                 } if (passwordValid(password) != null){
-                    message += passwordValid(password) + "\r\n";
+                    item.put("password", "Inputted password is invalid:" + passwordValid(password));
                 }if(userTypeValid(userType) != null){
-                    message += userTypeValid(userType) + "\r\n";
+                    item.put("userType", "Inputted user type is invalid:" + userTypeValid(userType));
                 }
-                System.out.println(message);
-                return "{\"error\":\""+ message +"\"}";
+                return item.toString();
             } else{
 
                 PreparedStatement ps = Main.db.prepareStatement("INSERT INTO Users " +

@@ -115,6 +115,7 @@ function checkLogin() {
         for (let button of playButtons){
             button.disabled = true;
         }
+        document.getElementById("create").disabled = true;
 
         logInHTML = "Not logged in. <a href='/client/login.html?login'>Log in</a>";
 
