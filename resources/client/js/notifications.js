@@ -1,99 +1,118 @@
+let newTag;
+
 function pageLoad(){
-    let coursesHTML = '<table>' +
-        '<tr>' +
-        '<th>Id</th>' +
-        '<th>Course</th>' +
-        '<th>Creator</th>' +
-        '<th class="rating">Rating</th>' +
-        '<th>Tags</th>' +
-        '</tr>';
+    document.getElementById('content').innerHTML = '<h1>Logging out, please wait...</h1>';
+}
 
-    let id;
-    let nullID = false;
-    id = Cookies.get("id");
-    console.log(id);
-    if (id === undefined){
-        id = "1";
-        nullID = true;
-    }
-    document.getElementById("create").addEventListener("click", goToCreate);
-    fetch('/courses/list/'+id, {method: 'get'}
+function login(event) {
+    event.preventDefault();
+    const form = document.getElementById("loginForm");
+    const formData = new FormData(form);
+    fetch("/users/login", {method: 'post', body: formData}
     ).then(response => response.json()
-    ).then(courses => {
-        for (let course of courses){
-            let starNum = Math.round(course.rating);
-            let starText = '';
-            let courseID = course.courseID;
-            for (i = 0; i < 5; i++){
-                if (starNum == 0){
-                    starText += '<span class="fa fa-star"></span>'
-                } else{
-                    starText +=
-                        '<span class="fa fa-star checked"></span>';
-                    starNum -= 1;
-                }
-            }
-            let progress = course.score;
-            let total = course.Total;
-            if (nullID){
-                total = 0;
-                progress = 0;
-            }
-            let percentage = 0;
-            if (total != 0){
-                percentage = Math.floor((progress/total)*100);
-            }
-            let progressBar = '<div class="container">' +
-                '<div class="progress" style="width: 300px;">' +
-                '    <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="'+progress+'" aria-valuemin="0" aria-valuemax="'+total+'" style="width:'+percentage+'%">' +
-                '    <span class="sr-only">'+percentage+'% Complete</span>' +
-                percentage+'% Complete'+
-                '    </div>' +
-                '    </div>' +
-                '    </div>';
-            let courseName = course.coursename;
-            if(course.coursename.length > 50){
-                courseName = courseName.slice(0, 50) + "...";
-            }
-            let Tags = (course.tags).split(";");
-            let tagButtons = "";
-            for(let tag of Tags){
-                if(tag != ""){
-                    tagButtons +=
-                        `<button class='searchButton' data-id='${tag}'>` +
-                        `${tag}</button>`;
-                }
-            }
-            let userNameButton = `<button class='searchButton' data-id='${course.username}'>` +
-                `${course.username}</button>`;
-            coursesHTML += `<tr>` +
-                `<td style="width: 10px">${course.courseID}</td>` +
-                `<td style="width: 350px"><button class='playButton' data-id='${course.courseID}'>${courseName}</button></td>` +
-                `<td><small>${userNameButton}</small></td>` +
-                `<td>${starText}</td>` +
-                `<td>${tagButtons}</td>` +
-                `</tr>` +
-                `<tr>` +
-                `<td colspan="5">${progressBar}</td>` +
-                `</tr>`;
-        }
-        coursesHTML += '</table>';
-        document.getElementById("listDiv").innerHTML = coursesHTML;
-    });
+    ).then(responseData => {
+        if (responseData.hasOwnProperty('error')){
+            alert(responseData.error);
+        } else{
+            Cookies.set("username", responseData.username);
+            Cookies.set("token", responseData.token);
+            Cookies.set("id", responseData.userID);
 
-    let playbuttons = document.getElementsByClassName("playButton");
-    for (let button of playbuttons){
-        button.addEventListener("click", goTo);
+            window.location.href = '/client/index.html';
+        }
+    });
+}
+
+function create(event) {
+    event.preventDefault();
+    let formData = new FormData();
+    formData.append("username", document.getElementById("username").value);
+    formData.append("password", document.getElementById("password").value);
+    formData.append("userType", document.getElementById("userType").value);
+    formData.append("tags", document.getElementById("tagAssembled").innerText);
+    fetch("/users/create", {method: 'post', body: formData}
+    ).then(response => response.json()
+    ).then(responseData => {
+        if (responseData.hasOwnProperty('error')){
+            if(!(responseData.username === undefined)){
+                alert(responseData.username);
+            }
+            if(!(responseData.password === undefined)){
+                alert(responseData.password);
+            }
+            if(!(responseData.userType === undefined)){
+                alert(responseData.userType);
+            }
+        } else{
+            window.location.href = '/client/login.html?login';
+        }
+    });
+}
+
+function logout(){
+    fetch("/users/logout", {method: 'post'}
+    ).then(response => response.json()
+    ).then(responseData =>{
+        if(responseData.hasOwnProperty('error')){
+            alert(responseData.error);
+        } else {
+            Cookies.remove("username");
+            Cookies.remove("token");
+            Cookies.remove("id");
+
+            window.location.href = '/client/index.html';
+        }
+    });
+}
+
+function addTag(){
+    let Tags = document.getElementById("listOfTags");
+    let text = document.getElementById("tagAssembled").innerText;
+    let textParts = text.split(";");
+    let exists = false;
+    newTag = undefined;
+    for (let tag of Tags){
+        if(tag.selected){
+            for (let part of textParts){
+                if (tag.value == part){
+                    exists = true;
+                }
+            }
+            if(!exists){
+                newTag = tag.value;
+            }
+        }
+    }
+    if(!(newTag === undefined)){
+        document.getElementById("tagAssembled").innerText += newTag + ";";
+    }
+    newTag = "";
+}
+
+function removeTag(){
+    if (!(newTag === undefined)){
+        let text = document.getElementById("tagAssembled").innerText;
+        let textParts = text.split(";");
+        let newText = "";
+        console.log(textParts);
+        if (textParts.length == 2){
+            newText = "";
+        }else{
+            for(let x = 0; x < textParts.length - 2; x++){
+                if(x != textParts.length - 2){
+                    newText += textParts[x] + ";";
+                }
+            }
+        }
+        document.getElementById("tagAssembled").innerText = newText;
     }
 }
 
-function goTo(event) {
+function goToCreate(event) {
     event.preventDefault();
-    const courseID = event.target.getAttribute("data-id");
-    Cookies.set("courseID", courseID);
-    window.location.href = '/client/displayQuiz.html';
+    window.location.href = '/client/login.html?create';
 }
-function goToCreate(event){
+function goToLogin(event) {
     event.preventDefault();
-    window.location.href = '/client/createCourse.html';
+    window.location.href = '/client/login.html?login';
 }
