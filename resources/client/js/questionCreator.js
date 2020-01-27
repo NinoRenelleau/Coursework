@@ -270,7 +270,7 @@ function outputs(frameLength){
                 eval(objects[objectSelect].code);
                 context.globalAlpha = 1;
             }
-            if(timer <= 150){
+            if(timer <= 250){
                 timer += frameLength*30;
                 context3.font = '15px Arial';
                 context3.fillStyle = "blue";
