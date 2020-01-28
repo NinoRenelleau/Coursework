@@ -279,6 +279,7 @@ function ratingProcess(){
         context.font = "30px Arial";
         context.fillText("Quiz Completed, Saving...", (w/6), ((2 * h) / 3)-30);
         let formData = new FormData();
+        console.log(rating);
         formData.append("QuizID", Cookies.get("quizID"));
         formData.append("Score", points);
         formData.append("Review", rating);
@@ -303,7 +304,6 @@ function ratingProcess(){
                     if (Response.hasOwnProperty('error')) {
                         alert(Response.error);
                     }
-                    parent.window.location.href = '/client/displayQuiz.html';
                 });
             });
         });
