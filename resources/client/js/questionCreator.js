@@ -297,8 +297,8 @@ function outputs(frameLength){
             else if (button.type == "wrongButtons") colour = "red";
             if(button.picked){
                 if (follow){
-                    button.x = mousePosition.x - button.width/2;
-                    button.y = mousePosition.y - button.height/2;
+                    button.x = mousePosition.snappedX - button.width/2;
+                    button.y = mousePosition.snappedY - button.height/2;
                     if (select){
                         follow = false;
                         select = false;
@@ -375,8 +375,8 @@ function outputs(frameLength){
             context.globalAlpha = brightness;
             if(header.picked){
                 if (follow){
-                    header.x = mousePosition.x - header.width/2;
-                    header.y = mousePosition.y + header.height/2;
+                    header.x = mousePosition.snappedX - header.width/2;
+                    header.y = mousePosition.snappedY + header.height/2;
                     if (select){
                         console.log("false");
                         follow = false;
