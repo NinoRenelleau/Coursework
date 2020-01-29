@@ -25,17 +25,17 @@ function pageLoad() {
     const pathParam = courseID +"s"+userID;
     let editColumn = '';
     if(creator){
-        editColumn = '<th>Edit</th>';
+        editColumn = '<th style="width: *2;" >Edit</th>';
         console.log(editColumn);
 
     }
-    let quizzesHTML = '<table>' +
+    let quizzesHTML = '<table style="width: 1000px;">' +
         '<tr>' +
-        '<th>Id</th>' +
-        '<th>Quiz</th>' +
-        '<th class="rating">Rating</th>' +
+        '<th style="align-content: left; width: *1;">Id</th>' +
+        '<th style="align-content: left; width: *3;" >Quiz</th>' +
+        '<th style="align-content: left; width: *2;" class="rating">Rating</th>' +
         editColumn +
-        '<th>Progress</th>' +
+        '<th style="align-content: left; width: *4;">Progress</th>' +
         '</tr>';
     console.log(quizzesHTML);
     fetch('/quizzes/list/'+pathParam, {method: 'get'}

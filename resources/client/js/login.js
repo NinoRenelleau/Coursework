@@ -41,6 +41,7 @@ function pageLoad(){
             '            <select id="listOfTags" style="vertical-align: middle; display: inline;" name="tags">\n' +
             '                <option value="mathematics">Maths</option>\n' +
             '                <option value="physics">Physics</option>\n' +
+            '                <option value="decision">Decision</option>\n' +
             '                <option value="mechanics">Mechanics</option>\n' +
             '                <option value="statistics">Statistics</option>\n' +
             '                <option value="computerScience">Computer Science</option>\n' +

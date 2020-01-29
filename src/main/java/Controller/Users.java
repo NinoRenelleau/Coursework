@@ -61,10 +61,10 @@ public class Users {
                 throw new Exception("A form parameter is missing in the HTTP request's URL.");
             }
             if (!usernameExists(username)){
-                return "{\"error\": \"The username in the HTTP request's URL, does not exist.\"}";
+                return "{\"error\": \"The username that you entered does not exist.\"}";
             }
             if (!passwordExists(username, password)){
-                return "{\"error\": \"The password in the HTTP request's URL, is wrong.\"}";
+                return "{\"error\": \"The password that you entered is wrong.\"}";
             }
             PreparedStatement ps = Main.db.prepareStatement("SELECT UserID, UserType, Tags, Score " +
                     "FROM Users WHERE (Username = ?) AND (Password = ?) ");

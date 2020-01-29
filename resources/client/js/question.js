@@ -20,6 +20,7 @@ let stars = [];
 let rating = 0;
 let selected = false;
 let waitTime = 0;
+let stop = false;
 
 function fixSize(){
     w = window.innerWidth;
@@ -70,7 +71,11 @@ function gameFrame(timestamp) {
         processes();
         //outputs();
     }
-    window.requestAnimationFrame(gameFrame);
+
+    if(!stop){
+        window.requestAnimationFrame(gameFrame);
+    }
+
 }
 
 function inputs(){
@@ -283,7 +288,7 @@ function ratingProcess(){
         formData.append("QuizID", Cookies.get("quizID"));
         formData.append("Score", points);
         formData.append("Review", rating);
-
+        stop = true;
         let formData2 = new FormData();
         formData2.append("ID", 0);
         fetch('/history/update', {method: 'post', body: formData}
@@ -304,10 +309,11 @@ function ratingProcess(){
                     if (Response.hasOwnProperty('error')) {
                         alert(Response.error);
                     }
+                    parent.window.location.href = '/client/displayQuiz.html';
                 });
             });
         });
-        parent.window.location.href = '/client/displayQuiz.html';
+
     }
 
 }
