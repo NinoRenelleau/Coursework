@@ -125,7 +125,7 @@ public class Quizzes {
             if (id == null) {
                 throw new Exception("Form data parameter is missing in the HTTP request.");
             }
-            PreparedStatement ps1 = Main.db.prepareStatement("SELECT UserID From Courses INNER JOIN Quizzes ON Quizzes.CourseID = Course.CourseID Where QuizID = ?");
+            PreparedStatement ps1 = Main.db.prepareStatement("SELECT UserID From Courses INNER JOIN Quizzes ON Quizzes.CourseID = Courses.CourseID Where QuizID = ?");
             ps1.setInt(1, id);
             ResultSet results = ps1.executeQuery();
             int userID = results.getInt(1);

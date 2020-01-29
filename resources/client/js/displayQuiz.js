@@ -13,6 +13,9 @@ function pageLoad() {
             document.getElementById("creatorButton").innerHTML = buttonHTML;
             creator = true;
             document.getElementById("addNew").addEventListener("click", createAquiz);
+            let deleteCourseHTML = '<button id="delete">Delete the Course</button>';
+            document.getElementById("deletorButton").innerHTML = deleteCourseHTML;
+            document.getElementById("delete").addEventListener("click", deleteCourse);
         }
 
 
@@ -24,6 +27,7 @@ function pageLoad() {
     if(creator){
         editColumn = '<th>Edit</th>';
         console.log(editColumn);
+
     }
     let quizzesHTML = '<table>' +
         '<tr>' +
@@ -76,16 +80,18 @@ function pageLoad() {
             }
 
             let editButton = ``;
+            let deleteButton = ``;
 
             if (creator){
-                editButton = `<td style="width: *5"><button class="editQuizButton" data-id='${quiz.quizID}'>Edit</button></td>`
+                editButton = `<td style="width: *10"><button class="editQuizButton" data-id='${quiz.quizID}'>Edit</button>`;
+                deleteButton = `<button class="deleteQuizButton" data-id='${quiz.quizID}'>Delete</button></td>`;
             }
 
             quizzesHTML += `<tr>` +
                 `<td style="width: *1">${quiz.quizID}</td>` +
                 `<td style="width: *5"><button class='playButton' data-id='${quiz.quizID}'>${quizName}</button></td>` +
                 `<td style="width: *5">${starText}</td>` +
-                editButton +
+                editButton + deleteButton +
                 `<td style="align-content: right; width: *3;">${progressBar}</td>` +
                 `</tr>`;
 
@@ -100,6 +106,11 @@ function pageLoad() {
         let editbuttons = document.getElementsByClassName("editQuizButton");
         for (let button of editbuttons){
             button.addEventListener("click", goToEdit);
+        }
+
+        let deletebuttons = document.getElementsByClassName("deleteQuizButton");
+        for (let button of deletebuttons){
+            button.addEventListener("click", deleteQuiz);
         }
     });
     });
@@ -119,10 +130,44 @@ function goToEdit(event){
     window.location.href = '/client/listQuestions.html';
 }
 
+function deleteQuiz(event){
+    event.preventDefault();
+    const quizID = event.target.getAttribute("data-id");
+    const sessionToken = Cookies.get("token");
+    let formData = new FormData();
+    formData.append("quizId", quizID);
+    formData.append("token", sessionToken);
+    fetch('/quizzes/delete', {method: 'post', body: formData}
+    ).then(response => response.json()
+    ).then(responseData =>{
+        if (responseData.hasOwnProperty('error')) {
+            alert(responseData.error);
+        }
+        window.location.href = '/client/displayQuiz.html';
+    });
+}
+
 function createAquiz(event) {
     event.preventDefault();
     window.location.href = '/client/createQuiz.html';
 }
 function goBack() {
     window.location.href = '/client/index.html';
+}
+
+function deleteCourse(event){
+    event.preventDefault();
+    const courseID = Cookies.get("courseID");
+    const sessionToken = Cookies.get("token");
+    let formData = new FormData();
+    formData.append("courseID", courseID);
+    formData.append("token", sessionToken);
+    fetch('/courses/delete', {method: 'post', body: formData}
+    ).then(response => response.json()
+    ).then(responseData =>{
+        if (responseData.hasOwnProperty('error')) {
+            alert(responseData.error);
+        }
+        window.location.href = '/client/index.html';
+    });
 }
